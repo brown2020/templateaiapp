@@ -3,10 +3,11 @@
 import { appConfig } from "@/appConfig";
 import { auth } from "@/firebase/firebaseConfig";
 import { useAuthStore } from "@/zustand/useAuthStore";
-import { FirebaseError } from "firebase/app";
+
 import { isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { getFirebaseErrorMessage } from "@/utils/errorHandler";
 
 export default function FinishSignUp() {
   const router = useRouter();
@@ -51,14 +52,8 @@ export default function FinishSignUp() {
           authDisplayName,
         });
       } catch (error) {
-        let errorMessage = "Unknown error signing in";
-        if (error instanceof FirebaseError) {
-          errorMessage = error.message;
-        } else if (error instanceof Error) {
-          errorMessage = error.message;
-        }
-
-        console.log("ERROR", errorMessage);
+        const errorMessage = getFirebaseErrorMessage(error);
+        console.error("Sign in error:", errorMessage);
         alert(errorMessage);
       } finally {
         window.localStorage.removeItem(appConfig.storage.emailSave);

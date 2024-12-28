@@ -15,6 +15,8 @@ import { MailIcon, XIcon } from "lucide-react";
 import { appConfig } from "@/appConfig";
 import { PulseLoader } from "react-spinners";
 
+import { getFirebaseErrorMessage } from "@/utils/errorHandler";
+
 export default function AuthComponent() {
   const setAuthDetails = useAuthStore((s) => s.setAuthDetails);
   const clearAuthDetails = useAuthStore((s) => s.clearAuthDetails);
@@ -64,20 +66,21 @@ export default function AuthComponent() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    const actionCodeSettings = {
-      url: `${window.location.origin}/loginfinish`,
-      handleCodeInApp: true,
-    };
+    if (!email || !name || !acceptTerms) return;
 
     try {
+      const actionCodeSettings = {
+        url: `${window.location.origin}/loginfinish`,
+        handleCodeInApp: true,
+      };
+
       await sendSignInLinkToEmail(auth, email, actionCodeSettings);
       window.localStorage.setItem(appConfig.storage.emailSave, email);
       window.localStorage.setItem(appConfig.storage.nameSave, name);
       setAuthDetails({ authPending: true });
     } catch (error) {
-      console.error("Error sending sign-in link:", error);
-      alert("An error occurred while sending the sign-in link.");
+      const errorMessage = getFirebaseErrorMessage(error);
+      alert(errorMessage);
       hideModal();
     }
   };
@@ -208,11 +211,11 @@ export default function AuthComponent() {
                 <button
                   type="submit"
                   className="btn-primary"
-                  disabled={!email || !name}
+                  disabled={!email || !name || !acceptTerms}
                 >
                   <div className="flex items-center gap-2 h-10">
                     <MailIcon size={30} />
-                    <div className="text-xl">Continue with Email</div>
+                    <div className="text-xl">Sign in with Email Link</div>
                   </div>
                 </button>
                 <label className="flex items-center space-x-2 pl-1">
