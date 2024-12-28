@@ -211,7 +211,7 @@ export default function SignUpPage() {
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
             <path
@@ -231,7 +231,7 @@ export default function SignUpPage() {
               fill="#EA4335"
             />
           </svg>
-          Sign up with Google
+          {loading ? "Creating account..." : "Sign up with Google"}
         </button>
       </div>
     </div>
