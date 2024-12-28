@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { Menu, X, User, Sparkles } from "lucide-react";
+import { Menu, X, User, Sparkles, LayoutDashboard } from "lucide-react";
 import { appConfig } from "@/appConfig";
 
 export default function Navbar() {
@@ -40,8 +40,9 @@ export default function Navbar() {
                 </Link>
                 <Link
                   href="/dashboard"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1"
                 >
+                  <LayoutDashboard className="h-4 w-4" />
                   Dashboard
                 </Link>
                 <Link
@@ -101,9 +102,10 @@ export default function Navbar() {
                 </Link>
                 <Link
                   href="/dashboard"
-                  className="text-gray-600 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium flex items-center gap-1"
                   onClick={toggleMenu}
                 >
+                  <LayoutDashboard className="h-4 w-4" />
                   Dashboard
                 </Link>
                 <Link
