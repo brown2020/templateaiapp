@@ -19,7 +19,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
-import Cookies from "js-cookie";
+import { setCookie, deleteCookie } from "cookies-next"; // <-- using cookies-next
 import { appConfig } from "@/appConfig";
 
 export interface UserMetadata {
@@ -107,11 +107,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const token = await user.getIdToken();
           const tokenResult = await getIdTokenResult(user);
 
-          // Set cookie with token
-          Cookies.set(appConfig.cookieName, token, {
+          // Set cookie with token using cookies-next
+          setCookie(appConfig.cookieName, token, {
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
-            expires: 7, // 7 days
+            maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
           });
 
           // Check admin claim
@@ -126,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         // Clear everything on sign out
-        Cookies.remove(appConfig.cookieName);
+        deleteCookie(appConfig.cookieName);
         setUser(null);
         setIsAdmin(false);
         setMetadata(null);
@@ -140,10 +140,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshInterval = setInterval(async () => {
         try {
           const token = await user.getIdToken(true);
-          Cookies.set(appConfig.cookieName, token, {
+          setCookie(appConfig.cookieName, token, {
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
-            expires: 7,
+            maxAge: 7 * 24 * 60 * 60, // 7 days
           });
         } catch (error) {
           console.error("Token refresh error:", error);
@@ -209,7 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       await firebaseSignOut(auth);
-      Cookies.remove(appConfig.cookieName);
+      deleteCookie(appConfig.cookieName);
       setUser(null);
       setIsAdmin(false);
       setMetadata(null);
