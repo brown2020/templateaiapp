@@ -14,6 +14,9 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
+// Import the profile store
+import useProfileStore from "@/zustand/useProfileStore";
+
 function formatDate(date: string | number | Date): string {
   if (!date) return "N/A";
   const d = new Date(date);
@@ -28,8 +31,19 @@ function formatDate(date: string | number | Date): string {
 }
 
 export default function ProfilePage() {
+  console.log("[ProfilePage] Rendering component...");
+
   const { user, signOut, metadata } = useAuth();
   const router = useRouter();
+
+  // ----- Pull from the Zustand store -----
+  const {
+    profile: storeProfile,
+    fetchProfile,
+    updateProfile,
+  } = useProfileStore();
+
+  // We'll keep local state so we can let the user type, then save changes
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({
     displayName: "",
@@ -41,54 +55,122 @@ export default function ProfilePage() {
     lastLoginDate: "",
   });
 
+  // On mount / update, check if we have a user
   useEffect(() => {
+    console.log("[ProfilePage] useEffect -> Checking user:", user);
     if (!user) {
+      console.log("[ProfilePage] No user found, redirecting to /login...");
       router.push("/login");
       return;
     }
 
-    // Initialize profile with user data
+    // 1) Fetch the user profile from Firestore via Zustand
+    console.log("[ProfilePage] Calling fetchProfile from Zustand...");
+    fetchProfile()
+      .then(() => {
+        console.log(
+          "[ProfilePage] fetchProfile completed. storeProfile =",
+          storeProfile
+        );
+      })
+      .catch((err) => {
+        console.error("[ProfilePage] fetchProfile error:", err);
+      });
+  }, [user, router, fetchProfile]);
+
+  // 2) Whenever the storeProfile changes, sync to local state
+  useEffect(() => {
+    console.log(
+      "[ProfilePage] Syncing local state with storeProfile:",
+      storeProfile
+    );
     setProfile({
-      displayName: user.displayName || "",
-      email: user.email || "",
-      phone: "", // You would fetch these from your user database
-      location: "",
-      bio: "",
-      joinedDate: formatDate(metadata?.createdAt || ""),
-      lastLoginDate: formatDate(metadata?.lastLoginAt || ""),
+      displayName: storeProfile.displayName || "",
+      email: storeProfile.email || "",
+      phone: storeProfile.phone || "",
+      location: storeProfile.location || "",
+      bio: storeProfile.bio || "",
+      joinedDate: formatDate(storeProfile.updatedAt || ""),
+      lastLoginDate: "", // or storeProfile.lastLogin if you have that
     });
-  }, [user, router, metadata]);
+  }, [storeProfile]);
+
+  // If user or metadata are available, we can set joinedDate/lastLogin from them, too
+  useEffect(() => {
+    if (metadata) {
+      setProfile((prev) => ({
+        ...prev,
+        joinedDate: formatDate(metadata.createdAt),
+        lastLoginDate: formatDate(metadata.lastLoginAt),
+      }));
+    }
+  }, [metadata]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    console.log(
+      "[ProfilePage] handleUpdateProfile called. Current profile:",
+      profile
+    );
 
+    if (!user?.uid) {
+      console.warn(
+        "[ProfilePage] No user found. handleUpdateProfile aborting."
+      );
+      toast.error("No user found");
+      return;
+    }
+
+    setLoading(true);
     try {
-      // Here you would update the user profile in your database
+      // 3) Save changes via Zustand store
+      console.log("[ProfilePage] Calling updateProfile in Zustand with:", {
+        displayName: profile.displayName,
+        email: profile.email,
+        phone: profile.phone,
+        location: profile.location,
+        bio: profile.bio,
+        updatedAt: new Date(),
+      });
+
+      await updateProfile({
+        displayName: profile.displayName,
+        email: profile.email,
+        phone: profile.phone,
+        location: profile.location,
+        bio: profile.bio,
+        updatedAt: new Date(),
+      });
+
+      console.log("[ProfilePage] updateProfile success.");
       toast.success("Profile updated successfully!");
     } catch (error) {
+      console.error("[ProfilePage] Failed to update profile:", error);
       toast.error("Failed to update profile");
-      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSignOut = async () => {
+    console.log("[ProfilePage] handleSignOut called.");
     try {
       await signOut();
       toast.success("Signed out successfully");
       router.push("/login");
     } catch (error) {
+      console.error("[ProfilePage] Failed to sign out:", error);
       toast.error("Failed to sign out");
-      console.error(error);
     }
   };
 
+  // If still no user, or user was redirected, show nothing
   if (!user) {
+    console.log("[ProfilePage] No user => returning null.");
     return null;
   }
 
+  console.log("[ProfilePage] Rendering main content with user:", user.uid);
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">

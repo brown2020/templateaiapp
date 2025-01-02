@@ -19,8 +19,11 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
-import { setCookie, deleteCookie } from "cookies-next"; // <-- using cookies-next
+import { setCookie, deleteCookie } from "cookies-next";
 import { appConfig } from "@/appConfig";
+
+// Import your Zustand auth store
+import { useAuthStore } from "@/zustand/useAuthStore";
 
 export interface UserMetadata {
   createdAt: Date;
@@ -46,6 +49,8 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  console.log("[AuthProvider] Rendering AuthProvider...");
+
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,125 +58,200 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [metadata, setMetadata] = useState<UserMetadata | null>(null);
 
   const updateUserMetadata = async (user: User, isNewUser = false) => {
-    if (!user.uid) return;
+    console.log(
+      "[updateUserMetadata] Called. user.uid =",
+      user.uid,
+      "| isNewUser =",
+      isNewUser
+    );
 
-    const userRef = doc(db, "users", user.uid);
+    if (!user.uid) {
+      console.warn("[updateUserMetadata] No user.uid found, returning early.");
+      return;
+    }
 
-    // First, check if the user document exists and get current data
-    const userDoc = await getDoc(userRef);
-    const now = new Date();
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userRef);
+      const now = new Date();
 
-    // Prepare the update data
-    const userData = {
-      lastLoginAt: serverTimestamp(),
-      displayName: user.displayName || undefined,
-      email: user.email || undefined,
-      photoURL: user.photoURL || undefined,
-      ...((!userDoc.exists() || isNewUser) && { createdAt: serverTimestamp() }),
-    };
+      const userData = {
+        lastLoginAt: serverTimestamp(),
+        displayName: user.displayName ?? null,
+        email: user.email ?? null,
+        photoURL: user.photoURL ?? null,
+        ...((!userDoc.exists() || isNewUser) && {
+          createdAt: serverTimestamp(),
+        }),
+      };
 
-    // Update the document
-    await setDoc(userRef, userData, { merge: true });
+      console.log(
+        "[updateUserMetadata] Merging userData into Firestore doc:",
+        userData
+      );
+      await setDoc(userRef, userData, { merge: true });
 
-    // Get the updated document to ensure we have the latest data
-    const updatedDoc = await getDoc(userRef);
-    const data = updatedDoc.data();
+      const updatedDoc = await getDoc(userRef);
+      const data = updatedDoc.data();
+      console.log("[updateUserMetadata] Updated doc data:", data);
 
-    if (data) {
-      // Convert Firestore Timestamps to Dates
-      const lastLoginAt =
-        data.lastLoginAt instanceof Timestamp ? data.lastLoginAt.toDate() : now;
-      const createdAt =
-        data.createdAt instanceof Timestamp
-          ? data.createdAt.toDate()
-          : data.lastLoginAt instanceof Timestamp
-          ? data.lastLoginAt.toDate()
-          : now;
+      if (data) {
+        const lastLoginAt =
+          data.lastLoginAt instanceof Timestamp
+            ? data.lastLoginAt.toDate()
+            : now;
+        const createdAt =
+          data.createdAt instanceof Timestamp
+            ? data.createdAt.toDate()
+            : data.lastLoginAt instanceof Timestamp
+            ? data.lastLoginAt.toDate()
+            : now;
 
-      setMetadata({
-        createdAt,
-        lastLoginAt,
-        displayName: data.displayName,
-        email: data.email,
-        photoURL: data.photoURL,
-      });
+        setMetadata({
+          createdAt,
+          lastLoginAt,
+          displayName: data.displayName,
+          email: data.email,
+          photoURL: data.photoURL,
+        });
+        console.log("[updateUserMetadata] State metadata updated:", {
+          createdAt,
+          lastLoginAt,
+          displayName: data.displayName,
+          email: data.email,
+          photoURL: data.photoURL,
+        });
+      }
+    } catch (err) {
+      console.error("[updateUserMetadata] Error updating user doc:", err);
     }
   };
 
   // Handle token changes and admin status
   useEffect(() => {
-    const unsubscribe = onIdTokenChanged(auth, async (user) => {
+    console.log("[AuthProvider] Setting up onIdTokenChanged listener...");
+
+    const unsubscribe = onIdTokenChanged(auth, async (firebaseUser) => {
+      console.log("[onIdTokenChanged] Fired. firebaseUser =", firebaseUser);
       setLoading(true);
-      if (user) {
+
+      if (firebaseUser) {
         try {
-          const token = await user.getIdToken();
-          const tokenResult = await getIdTokenResult(user);
+          // Attempt to get ID token
+          const token = await firebaseUser.getIdToken();
+          const tokenResult = await getIdTokenResult(firebaseUser);
+          console.log(
+            "[onIdTokenChanged] Got ID token, checking admin claims..."
+          );
 
-          // Set cookie with token using cookies-next
-          setCookie(appConfig.cookieName, token, {
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
-          });
-
-          // Check admin claim
-          setIsAdmin(tokenResult.claims.admin === true);
-          setUser(user);
-
-          // Update metadata
-          await updateUserMetadata(user);
-        } catch (error) {
-          console.error("Token refresh error:", error);
-          setError("Failed to refresh authentication");
-        }
-      } else {
-        // Clear everything on sign out
-        deleteCookie(appConfig.cookieName);
-        setUser(null);
-        setIsAdmin(false);
-        setMetadata(null);
-      }
-      setLoading(false);
-    });
-
-    // Set up token refresh
-    let refreshInterval: NodeJS.Timeout;
-    if (user) {
-      refreshInterval = setInterval(async () => {
-        try {
-          const token = await user.getIdToken(true);
+          // Set cookie with token
           setCookie(appConfig.cookieName, token, {
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60, // 7 days
           });
-        } catch (error) {
-          console.error("Token refresh error:", error);
+          console.log("[onIdTokenChanged] Cookie set with token.");
+
+          // Check admin claim
+          const adminClaim = tokenResult.claims.admin === true;
+          console.log("[onIdTokenChanged] adminClaim =", adminClaim);
+          setIsAdmin(adminClaim);
+
+          setUser(firebaseUser);
+          console.log(
+            "[onIdTokenChanged] Local user state set to firebaseUser.uid:",
+            firebaseUser.uid
+          );
+
+          // Update Firestore metadata
+          await updateUserMetadata(firebaseUser);
+
+          // ***** UPDATE ZUSTAND HERE *****
+          useAuthStore.setState({
+            uid: firebaseUser.uid,
+            authEmail: firebaseUser.email ?? "",
+            authDisplayName: firebaseUser.displayName ?? "",
+            // ...any other fields you want
+          });
+          console.log(
+            "[onIdTokenChanged] Updated Zustand auth store with UID:",
+            firebaseUser.uid
+          );
+        } catch (err) {
+          console.error("[onIdTokenChanged] Token refresh error:", err);
+          setError("Failed to refresh authentication");
         }
-      }, 10 * 60 * 1000); // Refresh every 10 minutes
+      } else {
+        // Clear everything on sign out
+        console.log(
+          "[onIdTokenChanged] firebaseUser is null. Clearing user & cookie."
+        );
+        deleteCookie(appConfig.cookieName);
+        setUser(null);
+        setIsAdmin(false);
+        setMetadata(null);
+
+        useAuthStore.setState({
+          uid: "",
+          authEmail: "",
+          authDisplayName: "",
+          // ...any other fields you want to reset
+        });
+      }
+      setLoading(false);
+    });
+
+    // Token refresh
+    let refreshInterval: NodeJS.Timeout | undefined;
+    if (user) {
+      console.log(
+        "[AuthProvider] Setting token refresh interval (10 min). user =",
+        user.uid
+      );
+      refreshInterval = setInterval(async () => {
+        try {
+          console.log("[AuthProvider] Refreshing token manually...");
+          const token = await user.getIdToken(true);
+          setCookie(appConfig.cookieName, token, {
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60,
+          });
+          console.log("[AuthProvider] Cookie re-set with refreshed token.");
+        } catch (err) {
+          console.error("[AuthProvider] Token refresh error in interval:", err);
+        }
+      }, 10 * 60 * 1000);
     }
 
     return () => {
+      console.log(
+        "[AuthProvider] Cleanup onIdTokenChanged listener & refreshInterval."
+      );
       unsubscribe();
       if (refreshInterval) clearInterval(refreshInterval);
     };
   }, [user]);
 
   const signIn = async (email: string, password: string) => {
+    console.log("[signIn] Called with email:", email);
     try {
       setError(null);
       const result = await signInWithEmailAndPassword(auth, email, password);
+      console.log("[signIn] Success, updating metadata...");
       await updateUserMetadata(result.user);
       return result.user;
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
       }
-      throw error;
+      console.error("[signIn] Error:", err);
+      throw err;
     }
   };
 
   const signUp = async (email: string, password: string) => {
+    console.log("[signUp] Called with email:", email);
     try {
       setError(null);
       const result = await createUserWithEmailAndPassword(
@@ -179,57 +259,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password
       );
+      console.log("[signUp] Success, updating metadata. isNewUser = true");
       await updateUserMetadata(result.user, true);
       return result.user;
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
       }
-      throw error;
+      console.error("[signUp] Error:", err);
+      throw err;
     }
   };
 
   const signInWithGoogle = async () => {
+    console.log("[signInWithGoogle] Called");
     try {
       setError(null);
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       const result = await signInWithPopup(auth, provider);
+      console.log("[signInWithGoogle] Success, updating metadata...");
       await updateUserMetadata(result.user);
       return result.user;
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
       }
-      throw error;
+      console.error("[signInWithGoogle] Error:", err);
+      throw err;
     }
   };
 
   const signOut = async () => {
+    console.log("[signOut] Called");
     try {
       setError(null);
       await firebaseSignOut(auth);
       deleteCookie(appConfig.cookieName);
+
       setUser(null);
       setIsAdmin(false);
       setMetadata(null);
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
+
+      useAuthStore.setState({
+        uid: "",
+        authEmail: "",
+        authDisplayName: "",
+        // any other fields you want to reset
+      });
+
+      console.log("[signOut] User signed out and Zustand store cleared.");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
       }
-      throw error;
+      console.error("[signOut] Error:", err);
+      throw err;
     }
   };
 
   const updateUserRole = async (newIsAdmin: boolean) => {
+    console.log("[updateUserRole] Called with newIsAdmin:", newIsAdmin);
+    if (!user) {
+      console.warn("[updateUserRole] No user found, cannot proceed.");
+      throw new Error("No user found");
+    }
     try {
       setError(null);
-      // Call your admin API to update user role
       const response = await fetch("/api/update-user-role", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${await user?.getIdToken()}`,
+          Authorization: `Bearer ${await user.getIdToken()}`,
         },
         body: JSON.stringify({ isAdmin: newIsAdmin }),
       });
@@ -239,18 +340,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Force token refresh to get new claims
-      if (user) {
-        await user.getIdToken(true);
+      console.log("[updateUserRole] Forcing token refresh...");
+      await user.getIdToken(true);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
-      }
-      throw error;
+      console.error("[updateUserRole] Error:", err);
+      throw err;
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     loading,
     error,
@@ -262,6 +363,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     updateUserRole,
   };
+
+  console.log(
+    "[AuthProvider] Returning context value. user =",
+    user?.uid || null
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
