@@ -18,6 +18,8 @@ export interface UserProfile {
   credits: number;
   bio?: string;
   updatedAt?: Date | null;
+  phone?: string;
+  location?: string;
 }
 
 //

@@ -16,9 +16,11 @@ export default function ProfileComponent() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
 
+  // Derived state to check if there are unsaved changes
+  const isDirty = displayName !== profile.displayName || bio !== profile.bio;
+
   useEffect(() => {
     console.log("[ProfileComponent] useEffect -> check user?.uid:", user?.uid);
-    // 1) fetchProfile from Zustand if user is logged in
     if (user?.uid) {
       console.log(
         "[ProfileComponent] user?.uid found. Calling fetchProfile()..."
@@ -39,7 +41,6 @@ export default function ProfileComponent() {
     }
   }, [user?.uid, fetchProfile]);
 
-  // 2) Sync local state with the store profile
   useEffect(() => {
     console.log(
       "[ProfileComponent] Syncing local state from store profile:",
@@ -49,14 +50,14 @@ export default function ProfileComponent() {
     setBio(profile.bio || "");
   }, [profile]);
 
+  const handleReset = () => {
+    setDisplayName(profile.displayName || "");
+    setBio(profile.bio || "");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(
-      "[ProfileComponent] handleSubmit called. displayName =",
-      displayName,
-      "bio =",
-      bio
-    );
+    console.log("[ProfileComponent] handleSubmit called.");
 
     if (!user?.uid) {
       console.warn("[ProfileComponent] No user found. handleSubmit aborting.");
@@ -65,7 +66,6 @@ export default function ProfileComponent() {
     }
 
     try {
-      // 3) Save changes using your Zustand store
       console.log("[ProfileComponent] Calling updateProfile with:", {
         displayName,
         bio,
@@ -76,7 +76,6 @@ export default function ProfileComponent() {
         bio,
         updatedAt: new Date(),
       });
-      console.log("[ProfileComponent] updateProfile successful.");
       handleSuccess("Profile updated successfully!");
     } catch (error) {
       console.error("[ProfileComponent] updateProfile error:", error);
@@ -139,7 +138,7 @@ export default function ProfileComponent() {
           />
         </div>
 
-        {/* Save Button */}
+        {/* Buttons */}
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-500">
             Last updated:{" "}
@@ -147,14 +146,25 @@ export default function ProfileComponent() {
               ? new Date(profile.updatedAt).toLocaleDateString()
               : "Never"}
           </div>
-          <button
-            type="submit"
-            className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                       flex items-center space-x-2"
-          >
-            Save Changes
-          </button>
+          <div className="flex items-center space-x-2">
+            {isDirty && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Discard Changes
+              </button>
+            )}
+            <button
+              type="submit"
+              className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
       </form>
     </div>
