@@ -76,7 +76,7 @@ export default function ProfilePage() {
       .catch((err) => {
         console.error("[ProfilePage] fetchProfile error:", err);
       });
-  }, [user, router, fetchProfile]);
+  }, [user, router, fetchProfile, storeProfile]);
 
   // 2) Whenever the storeProfile changes, sync to local state
   useEffect(() => {
@@ -205,7 +205,7 @@ export default function ProfilePage() {
           <form onSubmit={handleUpdateProfile} className="px-4 py-5 sm:p-6">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Mail className="h-4 w-4 text-gray-400" />
                   Email
                 </label>
@@ -222,7 +222,7 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <User className="h-4 w-4 text-gray-400" />
                   Display Name
                 </label>
@@ -237,7 +237,7 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Phone className="h-4 w-4 text-gray-400" />
                   Phone Number
                 </label>
@@ -252,7 +252,7 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-gray-400" />
                   Location
                 </label>
@@ -267,7 +267,7 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-gray-400" />
                   Member Since
                 </label>
@@ -280,7 +280,7 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-gray-400" />
                   Last Login
                 </label>
@@ -293,7 +293,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="text-sm font-medium text-gray-700 mb-2">
                   Bio
                 </label>
                 <textarea
