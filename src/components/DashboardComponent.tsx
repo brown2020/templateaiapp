@@ -10,15 +10,14 @@ import { UserProfile } from "@/types";
 
 function formatDate(date: string | number | Date | undefined | null): string {
   if (!date) return "N/A";
-  const d = new Date(date);
-  if (isNaN(d.getTime())) {
-    return "N/A";
-  }
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(d);
+  const parsedDate = new Date(date);
+  return isNaN(parsedDate.getTime())
+    ? "N/A"
+    : new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }).format(parsedDate);
 }
 
 export default function DashboardComponent() {
@@ -27,9 +26,9 @@ export default function DashboardComponent() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user?.uid) return;
+    if (!user?.uid) return;
 
+    const fetchProfile = async () => {
       try {
         const userProfile = await getUserProfile(user.uid);
         setProfile(userProfile);
@@ -54,7 +53,7 @@ export default function DashboardComponent() {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 className="text-2xl font-semibold mb-4">
           Welcome back,{" "}
           {profile?.displayName || user?.email?.split("@")[0] || "User"}!
@@ -87,7 +86,6 @@ export default function DashboardComponent() {
             </svg>
           }
         />
-
         <QuickActionCard
           title="Settings"
           description="Manage your account settings and preferences"
@@ -114,7 +112,6 @@ export default function DashboardComponent() {
             </svg>
           }
         />
-
         <QuickActionCard
           title="Help"
           description="Get help and support for any questions"
@@ -138,25 +135,23 @@ export default function DashboardComponent() {
       </div>
 
       {/* Account Overview */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold mb-4">Account Overview</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">Email</p>
-            <p className="font-medium">{user?.email}</p>
-          </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">Member Since</p>
-            <p className="font-medium">{formatDate(metadata?.createdAt)}</p>
-          </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">Last Login</p>
-            <p className="font-medium">{formatDate(metadata?.lastLoginAt)}</p>
-          </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">Account Type</p>
-            <p className="font-medium capitalize">{profile?.role || "User"}</p>
-          </div>
+          {[
+            { label: "Email", value: user?.email },
+            { label: "Member Since", value: formatDate(metadata?.createdAt) },
+            { label: "Last Login", value: formatDate(metadata?.lastLoginAt) },
+            { label: "Account Type", value: profile?.role || "User" },
+          ].map((item, index) => (
+            <div
+              key={index}
+              className="p-4 bg-gray-50 dark:bg-gray-600 rounded-lg"
+            >
+              <p className="text-sm text-gray-600">{item.label}</p>
+              <p className="font-medium">{item.value}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -177,7 +172,7 @@ function QuickActionCard({
   return (
     <Link
       href={href}
-      className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200"
+      className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow duration-200"
     >
       <div className="flex items-center mb-3">
         <div className="p-2 bg-blue-100 rounded-lg text-blue-600 mr-3">
@@ -185,7 +180,7 @@ function QuickActionCard({
         </div>
         <h3 className="font-semibold">{title}</h3>
       </div>
-      <p className="text-gray-600 text-sm">{description}</p>
+      <p className="text-gray-600 dark:text-gray-400 text-sm">{description}</p>
     </Link>
   );
 }
