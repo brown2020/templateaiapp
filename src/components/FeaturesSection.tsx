@@ -56,14 +56,6 @@ export default function FeaturesSection() {
             color="emerald"
           />
         </div>
-
-        {/* Bottom CTA */}
-        <div className="mt-20 text-center">
-          <Button variant="outline" size="lg" className="group">
-            Explore All Features
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Button>
-        </div>
       </div>
     </section>
   );
