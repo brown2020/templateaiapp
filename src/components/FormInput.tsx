@@ -7,7 +7,6 @@ import { Eye, EyeOff } from "lucide-react";
 
 interface FormInputProps {
   id: string;
-  label: string;
   type?: "text" | "email" | "password" | "number";
   value: string;
   onChange: (value: string) => void;
@@ -21,7 +20,6 @@ interface FormInputProps {
 
 export default function FormInput({
   id,
-  label,
   type = "text",
   value,
   onChange,
@@ -39,11 +37,6 @@ export default function FormInput({
 
   return (
     <div className={className}>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
-
       <div className="relative mt-1">
         <input
           id={id}
@@ -54,7 +47,7 @@ export default function FormInput({
           required={required}
           disabled={disabled}
           className={`
-            block w-full rounded-md px-3 py-2 shadow-sm focus:outline-none focus:ring-1
+            block w-full rounded-md text-sm px-3 py-2 shadow-sm focus:outline-none focus:ring-1
             ${
               error
                 ? "border-red-300 focus:border-red-500 focus:ring-red-500"

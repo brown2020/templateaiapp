@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-export default function Navbar() {
+export default function NavbarDashboard() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { user } = useAuth();
@@ -121,7 +121,7 @@ export default function Navbar() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-72 bg-background">
-                  <div className="flex flex-col space-y-2 mt-8 bg-background">
+                  <div className="flex flex-col space-y-2 mt-8">
                     {user ? (
                       <>
                         <MobileNavLink href="/feature">
