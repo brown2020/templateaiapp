@@ -4,24 +4,13 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { getUserProfile } from "@/utils/user";
 import { handleError } from "@/utils/errorHandler";
-import LoadingSpinner from "./LoadingSpinner";
+import LoadingSpinner from "../LoadingSpinner";
 import Link from "next/link";
 import { UserProfile } from "@/types";
+import { formatDate } from "@/lib/utils";
 
-function formatDate(date: string | number | Date | undefined | null): string {
-  if (!date) return "N/A";
-  const parsedDate = new Date(date);
-  return isNaN(parsedDate.getTime())
-    ? "N/A"
-    : new Intl.DateTimeFormat("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }).format(parsedDate);
-}
-
-export default function DashboardComponent() {
-  const { user, metadata } = useAuth();
+export function Dashboard() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
@@ -58,7 +47,7 @@ export default function DashboardComponent() {
           Welcome back,{" "}
           {profile?.displayName || user?.email?.split("@")[0] || "User"}!
         </h2>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-300">
           {profile?.bio ||
             "Complete your profile to personalize your experience."}
         </p>
@@ -140,16 +129,16 @@ export default function DashboardComponent() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
             { label: "Email", value: user?.email },
-            { label: "Member Since", value: formatDate(metadata?.createdAt) },
-            { label: "Last Login", value: formatDate(metadata?.lastLoginAt) },
+            { label: "Member Since", value: formatDate(user?.metadata.creationTime || '') },
+            { label: "Last Login", value: formatDate(user?.metadata.lastSignInTime || '') },
             { label: "Account Type", value: profile?.role || "User" },
           ].map((item, index) => (
             <div
               key={index}
               className="p-4 bg-gray-50 dark:bg-gray-600 rounded-lg"
             >
-              <p className="text-sm text-gray-600">{item.label}</p>
-              <p className="font-medium">{item.value}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{item.label}</p>
+              <p className="font-medium dark:text-gray-100">{item.value}</p>
             </div>
           ))}
         </div>

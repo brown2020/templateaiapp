@@ -1,7 +1,5 @@
-"use client";
-
-import HelpComponent from "@/components/HelpComponent";
+import { Help } from "@/components/routes";
 
 export default function HelpPage() {
-  return <HelpComponent />;
+  return <Help />;
 }

@@ -7,9 +7,7 @@ import {
   Github,
   Twitter,
   Linkedin,
-  Facebook,
   Instagram,
-  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +33,7 @@ export default function Footer() {
   ];
 
   const productLinks = [
-    { label: "Features", href: "/features" },
+    { label: "Features", href: "/feature" },
     { label: "Pricing", href: "/pricing" },
     { label: "Documentation", href: "/docs" },
     { label: "API Reference", href: "/api" },

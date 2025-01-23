@@ -23,7 +23,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = localStorage.getItem("theme") as Theme || "system",
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
 
@@ -41,6 +41,7 @@ export function ThemeProvider({
     }
 
     root.classList.add(theme);
+    localStorage.setItem("theme", theme);
   }, [theme]);
 
   const value = {

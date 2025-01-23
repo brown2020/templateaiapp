@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { Menu, X, User, Sparkles, LayoutDashboard } from "lucide-react";
+import { Menu, User, Sparkles, LayoutDashboard } from "lucide-react";
 import { appConfig } from "@/appConfig";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Navbar() {
@@ -66,8 +66,8 @@ export default function Navbar() {
 
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-            ? "top-4 left-4 right-4 mx-auto max-w-8xl rounded-xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-lg"
-            : "bg-white dark:bg-gray-900"
+          ? "top-4 left-4 right-4 mx-auto max-w-8xl rounded-xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-lg"
+          : "bg-white dark:bg-gray-900"
           }`}
       >
         <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-8xl">
@@ -99,14 +99,14 @@ export default function Navbar() {
                   </NavLink>
                 </>
               ) : (
-                <>
+                <div className="flex items-center gap-3">
                   <Button variant="ghost">
                     <Link href="/login">Login</Link>
                   </Button>
-                  <Button variant="default" className="ml-2">
+                  <Button variant="default">
                     <Link href="/signup">Sign Up</Link>
                   </Button>
-                </>
+                </div>
               )}
               <ThemeToggle />
             </div>
@@ -121,6 +121,9 @@ export default function Navbar() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-72 bg-background">
+                  <SheetTitle>
+                    {appConfig.title}
+                  </SheetTitle>
                   <div className="flex flex-col space-y-2 mt-8 bg-background">
                     {user ? (
                       <>

@@ -7,6 +7,9 @@ import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { usePathname } from "next/navigation";
+import { publicPaths } from "@/appConfig";
+import NavbarDashboard from "@/components/NavbarDashboard";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,12 +18,14 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isPublic = publicPaths.includes(pathname);
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen flex flex-col`}>
         <ThemeProvider>
           <AuthProvider>
-            <Navbar />
+            {isPublic ? <Navbar /> : <NavbarDashboard />}
             <main className="flex-grow bg-background text-foreground">
               {children}
             </main>

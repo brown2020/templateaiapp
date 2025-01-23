@@ -3,11 +3,15 @@
 import { useAuth } from "@/context/AuthContext";
 import { appConfig } from "@/appConfig";
 import Link from "next/link";
-import { ArrowRight, Shield, Zap, Code2, Cloud, Users } from "lucide-react";
+import { ArrowRight, Shield, Zap, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import FeaturesSection from "./FeaturesSection";
+import ReviewsSection from "./ReviewsSection";
+import TestimonialsSection from "./TestimonialsSection";
+import FAQSection from "./FAQSection";
+import GrowthSection from "./GrowthSection";
+import PricingSection from "./PricingSection";
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -58,7 +62,7 @@ export default function HomePage() {
               <Button
                 size="lg"
                 variant="default"
-                className="bg-white text-blue-600 hover:bg-white/90 dark:bg-transparent dark:text-white dark:hover:bg-transparent"
+                className="bg-white text-blue-600 hover:bg-white/90 dark:bg-white dark:text-blue-600 dark:hover:bg-white/90"
               >
                 <Link href="/dashboard" className="flex items-center gap-2">
                   Go to Dashboard <ArrowRight className="w-4 h-4" />
@@ -72,9 +76,22 @@ export default function HomePage() {
       {/* Features Section */}
       <FeaturesSection />
 
+      {/* Reviews Section */}
+      {appConfig.reviews.visible && <ReviewsSection />}
+
+      {/* Growth Section */}
+      {appConfig.features.visible && <GrowthSection />}
+
+      {/* Testimonials Section */}
+      {appConfig.testimonials.visible && <TestimonialsSection />}
+
       {/* CTA Section */}
       {!user && (
-        <section className="relative pb-24 overflow-hidden">
+        <section className="relative py-8 overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute inset-0 bg-slate-50 dark:bg-slate-950">
+            <div className="absolute inset-0 bg-grid-slate-200/50 dark:bg-grid-slate-800/50 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]" />
+          </div>
           {/* Dynamic background with gradient overlay */}
           <div className="p-8 lg:p-12 bg-gradient-to-r from-blue-600/10 to-violet-600/10 dark:from-blue-900/10 dark:to-violet-900/10 backdrop-blur-sm border border-gray-200/20 dark:border-gray-700/20">
             <div className="text-center">
@@ -118,6 +135,12 @@ export default function HomePage() {
         </section>
       )
       }
+
+      {/* Pricing Section */}
+      {appConfig.pricing.visible && <PricingSection />}
+
+      {/* FAQ Section */}
+      {appConfig.help.visible && <FAQSection />}
     </div >
   );
 }

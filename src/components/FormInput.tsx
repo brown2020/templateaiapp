@@ -4,10 +4,11 @@
 
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FormInputProps {
   id: string;
-  type?: "text" | "email" | "password" | "number";
+  type?: "text" | "email" | "password" | "number" | "tel";
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -36,7 +37,7 @@ export default function FormInput({
     showPasswordToggle && type === "password" && showPassword ? "text" : type;
 
   return (
-    <div className={className}>
+    <div>
       <div className="relative mt-1">
         <input
           id={id}
@@ -46,15 +47,14 @@ export default function FormInput({
           placeholder={placeholder}
           required={required}
           disabled={disabled}
-          className={`
-            block w-full rounded-md text-sm px-3 py-2 shadow-sm focus:outline-none focus:ring-1
-            ${
-              error
-                ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            }
-            ${disabled ? "bg-gray-100" : ""}
-          `}
+          className={cn(
+            "block w-full rounded-md text-sm px-3 py-2 shadow-sm focus:outline-none focus:ring-1",
+            error
+              ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+              : "border-gray-300 focus:border-blue-500 focus:ring-blue-500",
+            disabled && "bg-gray-100",
+            className
+          )}
         />
 
         {showPasswordToggle && type === "password" && (

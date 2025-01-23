@@ -2,7 +2,6 @@
 
 import { Shield, Zap, Code2, Cloud, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { appConfig } from "@/appConfig";
 
 export default function FeaturesSection() {

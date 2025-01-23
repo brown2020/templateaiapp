@@ -27,10 +27,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { loginSchema } from "@/schemas";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export default function Login() {
+export function Login() {
     const router = useRouter();
     const { signInWithGoogle } = useAuth();
     const [loading, setLoading] = useState(false);

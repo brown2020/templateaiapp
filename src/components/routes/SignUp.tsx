@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { sendSignInLinkToEmail } from "firebase/auth";
-import { Loader2, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,13 +23,11 @@ import { SocialSignInButton } from "@/components/SocialSignInButton";
 import { signUpSchema } from "@/schemas";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import LoadingSpinner from "./LoadingSpinner";
 
-export default function SignUp() {
+export function SignUp() {
     const [loading, setLoading] = useState(false);
     const [sendingLink, setSendingLink] = useState(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-    const [email, setEmail] = useState("");
     const router = useRouter();
     const { signUp, signInWithGoogle } = useAuth();
     const form = useForm<z.infer<typeof signUpSchema>>({
@@ -47,7 +45,6 @@ export default function SignUp() {
         setLoading(true);
         try {
             await signUp(values.email, values.password);
-            console.log(values);
             toast.success("Account created successfully!");
             router.push("/dashboard");
         } catch (error) {

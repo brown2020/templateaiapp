@@ -104,8 +104,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data.createdAt instanceof Timestamp
             ? data.createdAt.toDate()
             : data.lastLoginAt instanceof Timestamp
-            ? data.lastLoginAt.toDate()
-            : now;
+              ? data.lastLoginAt.toDate()
+              : now;
 
         setMetadata({
           createdAt,

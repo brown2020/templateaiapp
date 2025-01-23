@@ -1,31 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { Menu, X, User, Sparkles, LayoutDashboard } from "lucide-react";
+import { Menu, User, Sparkles, LayoutDashboard } from "lucide-react";
 import { appConfig } from "@/appConfig";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export default function NavbarDashboard() {
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [isScrolled,] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, metadata } = useAuth();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     if (window.scrollY > 10) {
+  //       setIsScrolled(true);
+  //     } else {
+  //       setIsScrolled(false);
+  //     }
+  //   };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  //   window.addEventListener("scroll", handleScroll);
+  //   return () => window.removeEventListener("scroll", handleScroll);
+  // }, []);
 
   const NavLink = ({
     href,
@@ -49,13 +50,15 @@ export default function NavbarDashboard() {
     href: string;
     children: React.ReactNode;
   }) => (
-    <Link
-      href={href}
-      className="flex items-center gap-2 p-3 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-      onClick={() => setIsSheetOpen(false)}
-    >
-      {children}
-    </Link>
+    <Button variant="outline" className="w-full text-left dark:border-input/20 dark:hover:bg-accent/50 dark:hover:text-accent-foreground">
+      <Link
+        href={href}
+        className="flex items-center gap-2 p-3 text-sm transition-colors"
+        onClick={() => setIsSheetOpen(false)}
+      >
+        {children}
+      </Link>
+    </Button>
   );
 
   return (
@@ -66,8 +69,8 @@ export default function NavbarDashboard() {
 
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-            ? "top-4 left-4 right-4 mx-auto max-w-8xl rounded-xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-lg"
-            : "bg-white dark:bg-gray-900"
+          ? "top-4 left-4 right-4 mx-auto max-w-8xl rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-lg"
+          : "bg-white dark:bg-gray-800"
           }`}
       >
         <div className="px-4 sm:px-6 lg:px-8 mx-auto max-w-8xl">
@@ -94,19 +97,28 @@ export default function NavbarDashboard() {
                     Dashboard
                   </NavLink>
                   <NavLink href="/profile">
-                    <User className="h-4 w-4" />
+                    {metadata?.photoURL ? (
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={metadata.photoURL} alt="Profile" />
+                        <AvatarFallback>
+                          {metadata.displayName?.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <User className="h-4 w-4" />
+                    )}
                     Profile
                   </NavLink>
                 </>
               ) : (
-                <>
-                  <Button variant="ghost">
+                <div className="flex items-center gap-4">
+                  <Button variant="ghost" className="dark:text-gray-300 dark:hover:text-white">
                     <Link href="/login">Login</Link>
                   </Button>
-                  <Button variant="default" className="ml-2">
+                  <Button variant="default">
                     <Link href="/signup">Sign Up</Link>
                   </Button>
-                </>
+                </div>
               )}
               <ThemeToggle />
             </div>
@@ -116,31 +128,34 @@ export default function NavbarDashboard() {
               <ThemeToggle />
               <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-10 w-10">
+                  <Button variant="outline" size="icon" className="h-10 w-10" >
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-72 bg-background">
+                <SheetContent side="right" className="w-72 bg-background dark:border-gray-700">
+                  <SheetTitle>
+                    {appConfig.title}
+                  </SheetTitle>
                   <div className="flex flex-col space-y-2 mt-8">
                     {user ? (
                       <>
                         <MobileNavLink href="/feature">
                           <Sparkles className="h-4 w-4" />
-                          Feature
+                          <span className="dark:text-gray-300">Feature</span>
                         </MobileNavLink>
                         <MobileNavLink href="/dashboard">
                           <LayoutDashboard className="h-4 w-4" />
-                          Dashboard
+                          <span className="dark:text-gray-300">Dashboard</span>
                         </MobileNavLink>
                         <MobileNavLink href="/profile">
                           <User className="h-4 w-4" />
-                          Profile
+                          <span className="dark:text-gray-300">Profile</span>
                         </MobileNavLink>
                       </>
                     ) : (
                       <>
                         <Button className="mt-2" variant="outline">
-                          <Link href="/login">Login</Link>
+                          <Link href="/login" className="dark:text-gray-300">Login</Link>
                         </Button>
                         <Button className="mt-2" variant="default">
                           <Link href="/signup">Sign Up</Link>
