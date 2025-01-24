@@ -8,11 +8,12 @@ import { appConfig } from "@/appConfig";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, metadata } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -94,7 +95,16 @@ export default function Navbar() {
                     Dashboard
                   </NavLink>
                   <NavLink href="/profile">
-                    <User className="h-4 w-4" />
+                    {metadata?.photoURL ? (
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={metadata.photoURL} alt="Profile" />
+                        <AvatarFallback>
+                          {metadata.displayName?.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <User className="h-4 w-4" />
+                    )}
                     Profile
                   </NavLink>
                 </>

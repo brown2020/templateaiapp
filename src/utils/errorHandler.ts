@@ -23,6 +23,8 @@ export const getFirebaseErrorMessage = (error: unknown): string => {
         return "Too many failed attempts. Please try again later.";
       case "auth/network-request-failed":
         return "Network error. Please check your connection and try again.";
+      case "auth/popup-closed-by-user":
+        return "Popup closed by user. Please try again.";
       default:
         return firebaseError.message || "An unknown error occurred.";
     }

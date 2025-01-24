@@ -24,6 +24,7 @@ import { appConfig } from "@/appConfig";
 
 // Import your Zustand auth store
 import { useAuthStore } from "@/zustand/useAuthStore";
+import useProfileStore from "@/zustand/useProfileStore";
 
 export interface UserMetadata {
   createdAt: Date;
@@ -50,6 +51,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   console.log("[AuthProvider] Rendering AuthProvider...");
+  const { updateProfile } = useProfileStore();
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -280,6 +282,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await signInWithPopup(auth, provider);
       console.log("[signInWithGoogle] Success, updating metadata...");
       await updateUserMetadata(result.user);
+      await updateProfile({
+        email: result.user.email ?? "",
+      });
       return result.user;
     } catch (err) {
       if (err instanceof Error) {

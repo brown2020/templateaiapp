@@ -39,11 +39,11 @@ export function Profile() {
     const form = useForm<z.infer<typeof profileFormSchema>>({
         resolver: zodResolver(profileFormSchema),
         defaultValues: {
-            displayName: "",
-            email: "",
-            phone: "",
-            location: "",
-            bio: "",
+            displayName: storeProfile.displayName || "",
+            email: storeProfile.email || "",
+            phone: storeProfile.phone || "",
+            location: storeProfile.location || "",
+            bio: storeProfile.bio || "",
         },
     });
 

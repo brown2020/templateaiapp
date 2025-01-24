@@ -28,6 +28,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { loginSchema } from "@/schemas";
 import { Checkbox } from "@/components/ui/checkbox";
+import { isValidCallbackUrl } from "@/utils/url";
+import { WEBAPP_URL } from "@/utils/constants";
 
 export function Login() {
     const router = useRouter();
@@ -82,7 +84,14 @@ export function Login() {
             setLoading(true);
             await signInWithEmailAndPassword(auth, values.email, values.password);
             toast.success("Successfully signed in!");
-            router.push("/dashboard");
+            const searchParams = new URLSearchParams(window.location.search);
+            const callbackUrl = searchParams.get('callbackUrl');
+            await new Promise(resolve => setTimeout(resolve, 200));
+            if (callbackUrl && isValidCallbackUrl(callbackUrl, WEBAPP_URL)) {
+                router.push(callbackUrl);
+            } else {
+                router.push('/dashboard');
+            }
         } catch (error) {
             toast.error(getFirebaseErrorMessage(error));
             setLoading(false);
@@ -94,10 +103,17 @@ export function Login() {
             setIsGoogleLoading(true);
             await signInWithGoogle();
             toast.success("Successfully logged in with Google!");
-            router.push("/dashboard");
+            const searchParams = new URLSearchParams(window.location.search);
+            const callbackUrl = searchParams.get('callbackUrl');
+
+            if (callbackUrl && isValidCallbackUrl(callbackUrl, WEBAPP_URL)) {
+                router.push(callbackUrl);
+            } else {
+                router.push('/dashboard');
+            }
         } catch (err) {
             const error = err as AuthError;
-            toast.error(error.message || "Failed to log in with Google");
+            toast.error(getFirebaseErrorMessage(error));
         } finally {
             setIsGoogleLoading(false);
         }

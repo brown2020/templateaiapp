@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { adminPaths, privatePaths, redirects, appConfig } from "./appConfig";
+import { WEBAPP_URL } from "./utils/constants";
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -29,8 +30,7 @@ export async function middleware(request: NextRequest) {
   // Handle authentication for private and admin routes
   if (isPrivate || isAdmin) {
     if (!isAuthenticated) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("callbackUrl", path);
+      const loginUrl = `${WEBAPP_URL}/login?callbackUrl=${encodeURIComponent(WEBAPP_URL + request.nextUrl.pathname + request.nextUrl.search)}`;
       return NextResponse.redirect(loginUrl);
     }
   }
@@ -41,7 +41,11 @@ export async function middleware(request: NextRequest) {
   }
 
   // Allow the request to proceed
-  return NextResponse.next();
+  const response = NextResponse.next();
+
+  // Prevent click jacking by disabling iframe embedding
+  response.headers.set('X-Frame-Options', 'DENY');
+  return response;
 }
 
 // Update matcher to include all paths we want to handle
