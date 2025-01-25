@@ -1,3 +1,5 @@
+export const WEBAPP_URL = process.env.NEXT_PUBLIC_WEBAPP_URL || "http://localhost:3000";
+
 export const AUTH_MESSAGES = {
   LOGIN_SUCCESS: "Successfully logged in!",
   LOGIN_ERROR: "Failed to login. Please check your credentials.",

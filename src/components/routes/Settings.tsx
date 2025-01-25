@@ -4,8 +4,9 @@ import { useState } from "react";
 import { appConfig } from "@/appConfig";
 import { Settings as SettingsIcon, Save } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { Button } from "@/components/ui/button";
 
-export default function SettingsComponent() {
+export function Settings() {
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<{ [key: string]: boolean }>({
     notifications: true,
@@ -36,18 +37,18 @@ export default function SettingsComponent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white shadow rounded-lg">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
           {/* Header */}
-          <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+          <div className="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center">
-              <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <SettingsIcon className="h-6 w-6 text-blue-600" />
+              <div className="h-12 w-12 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                <SettingsIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="ml-4">
-                <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-                <p className="text-sm text-gray-500">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Settings</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Manage your account settings and preferences
                 </p>
               </div>
@@ -60,12 +61,12 @@ export default function SettingsComponent() {
               {appConfig.settings.sections.map((section) => (
                 <div
                   key={section.title}
-                  className="border-b border-gray-200 pb-8 last:border-b-0"
+                  className="border-b border-gray-200 dark:border-gray-700 pb-8 last:border-b-0"
                 >
-                  <h2 className="text-lg font-medium text-gray-900 mb-2">
+                  <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                     {section.title}
                   </h2>
-                  <p className="text-sm text-gray-500 mb-6">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                     {section.description}
                   </p>
                   <div className="space-y-6">
@@ -75,10 +76,10 @@ export default function SettingsComponent() {
                         className="flex items-center justify-between"
                       >
                         <div>
-                          <h3 className="text-sm font-medium text-gray-900">
+                          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {item.label}
                           </h3>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
                             {item.description}
                           </p>
                         </div>
@@ -89,7 +90,7 @@ export default function SettingsComponent() {
                             checked={settings[item.key] || false}
                             onChange={() => handleToggle(item.key)}
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 dark:after:border-gray-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                         </label>
                       </div>
                     ))}
@@ -100,16 +101,18 @@ export default function SettingsComponent() {
           </div>
 
           {/* Footer */}
-          <div className="px-4 py-4 sm:px-6 border-t border-gray-200 bg-gray-50">
+          <div className="px-4 py-4 sm:px-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
             <div className="flex justify-end">
-              <button
+              <Button
                 onClick={handleSave}
+                variant="primary"
                 disabled={loading}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                loading={loading}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900 disabled:opacity-50 transition-colors"
               >
-                <Save className="h-4 w-4 mr-2" />
+                {!loading && <Save className="h-4 w-4" />}
                 {loading ? "Saving..." : "Save Changes"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
