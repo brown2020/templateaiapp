@@ -14,10 +14,11 @@ import {
     MapPin,
     Calendar,
     LogOut,
+    CreditCard,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import useProfileStore from "@/zustand/useProfileStore";
-import { formatDate } from "@/lib/utils";
+import moment from "moment";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { profileFormSchema } from "@/schemas/profile.schema";
@@ -25,6 +26,7 @@ import FormInput from "@/components/FormInput";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function Profile() {
     const [loading, setLoading] = useState(false);
@@ -243,7 +245,7 @@ export function Profile() {
                                         <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                                         Member Since
                                     </FormLabel>
-                                    <FormInput id="joinedDate" value={formatDate(user?.metadata.creationTime || "")} onChange={() => { }} className="border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm text-gray-900 dark:text-gray-100" disabled />
+                                    <FormInput id="joinedDate" value={moment(user?.metadata.creationTime).format('LLL')} onChange={() => { }} className="border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm text-gray-900 dark:text-gray-100" disabled />
                                 </div>
 
                                 <div className="max-sm:col-span-2">
@@ -253,7 +255,7 @@ export function Profile() {
                                     </FormLabel>
                                     <FormInput
                                         id="lastLoginDate"
-                                        value={formatDate(user?.metadata.lastSignInTime || "")}
+                                        value={moment(user?.metadata.lastSignInTime).format('LLL')}
                                         onChange={() => { }}
                                         className="border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm text-gray-900 dark:text-gray-100" disabled />
                                 </div>
@@ -292,6 +294,31 @@ export function Profile() {
                             </div>
                         </form>
                     </Form>
+
+                    {/* Credits Display Section */}
+                    <div className="px-3 py-4 sm:p-6 border-t border-gray-200 dark:border-gray-700">
+                        <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500" />
+                            Your Credits
+                        </h2>
+                        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-2xl font-bold text-gray-900 dark:text-white">{storeProfile.credits}</span>
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">Available Credits</span>
+                                </div>
+                                <div className="mt-4">
+                                    <Button
+                                        variant="outline"
+                                        size="xs"
+                                        className="text-blue-600 hover:text-blue-700 border-blue-600 hover:border-blue-700 dark:text-blue-400 dark:hover:text-blue-500 dark:border-blue-400 dark:hover:border-blue-500"
+                                    >
+                                        Buy More Credits
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
 
                     {/* Account Settings Section */}
                     <div className="px-3 py-4 sm:p-6 border-t border-gray-200 dark:border-gray-700">

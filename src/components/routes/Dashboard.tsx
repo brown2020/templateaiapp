@@ -7,10 +7,10 @@ import { handleError } from "@/utils/errorHandler";
 import LoadingSpinner from "../LoadingSpinner";
 import Link from "next/link";
 import { UserProfile } from "@/types";
-import { formatDate } from "@/lib/utils";
+import moment from "moment";
 
 export function Dashboard() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
@@ -30,6 +30,7 @@ export function Dashboard() {
 
     fetchProfile();
   }, [user?.uid]);
+  console.log('profile:>> ', profile);
 
   if (loading) {
     return (
@@ -129,9 +130,9 @@ export function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
             { label: "Email", value: user?.email },
-            { label: "Member Since", value: formatDate(user?.metadata.creationTime || '') },
-            { label: "Last Login", value: formatDate(user?.metadata.lastSignInTime || '') },
-            { label: "Account Type", value: profile?.role || "User" },
+            { label: "Member Since", value: moment(user?.metadata.creationTime).format('LLL') },
+            { label: "Last Login", value: moment(user?.metadata.lastSignInTime).format('LLL') },
+            { label: "Account Type", value: isAdmin ? "Admin" : "User" },
           ].map((item, index) => (
             <div
               key={index}

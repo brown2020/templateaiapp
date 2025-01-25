@@ -41,3 +41,8 @@ export type FirebaseError = {
   code: string;
   message: string;
 };
+
+export interface DecodedToken {
+  admin?: boolean;
+  [key: string]: any;
+}

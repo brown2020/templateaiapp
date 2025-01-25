@@ -337,7 +337,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${await user.getIdToken()}`,
         },
-        body: JSON.stringify({ isAdmin: newIsAdmin }),
+        body: JSON.stringify({ userId: user.uid, isAdmin: newIsAdmin }),
       });
 
       if (!response.ok) {

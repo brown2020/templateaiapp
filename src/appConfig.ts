@@ -345,7 +345,7 @@ export const privatePaths = [
 ];
 
 // Routes that require admin privileges
-export const adminPaths = ["/admin", "/admin/users", "/admin/settings"];
+export const adminPaths = ["/admin", "/admin/dashboard", "/admin/users", "/admin/settings"];
 
 // Routes that are publicly accessible
 export const publicPaths = [
