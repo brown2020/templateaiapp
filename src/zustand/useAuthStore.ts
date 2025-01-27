@@ -1,4 +1,5 @@
 import { db } from "@/firebase/firebaseConfig";
+import { UserSession } from "@/types/auth";
 import { Timestamp, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { create } from "zustand";
 
@@ -16,6 +17,7 @@ interface AuthState {
   isInvited: boolean;
   lastSignIn: Timestamp | null;
   premium: boolean;
+  sessions: UserSession[];
 }
 
 // Define the actions interface
@@ -41,6 +43,7 @@ const defaultAuthState: AuthState = {
   isInvited: false,
   lastSignIn: null,
   premium: false,
+  sessions: [],
 };
 
 // Create the Zustand store

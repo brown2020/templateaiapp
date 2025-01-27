@@ -2,6 +2,7 @@ import { BarChart3, Calendar, Globe, Paintbrush, PieChart, Users } from "lucide-
 
 export const appConfig = {
   cookieName: "app_auth_token",
+  sessionId: "session_id",
   title: "Template App",
   description:
     "A modern web application template with authentication and user management",

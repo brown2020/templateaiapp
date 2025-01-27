@@ -4,6 +4,7 @@ import { adminPaths, privatePaths, redirects, appConfig } from "./appConfig";
 import { WEBAPP_URL } from "./utils/constants";
 import { jwtDecode } from "jwt-decode";
 import type { DecodedToken } from "@/types";
+import { deleteCookie } from "cookies-next";
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -13,10 +14,12 @@ export async function middleware(request: NextRequest) {
   const isAuthenticated = !!authToken?.value;
 
   let isAdmin = false;
+  let userId = null;
   if (authToken?.value) {
     try {
       const decodedToken = jwtDecode<DecodedToken>(authToken.value);
       isAdmin = !!decodedToken.admin;
+      userId = decodedToken.user_id;
     } catch (error) {
       console.error("Token decoding error:", error);
       // Treat as unauthenticated if token is invalid
@@ -47,6 +50,31 @@ export async function middleware(request: NextRequest) {
     if (!isAuthenticated) {
       const loginUrl = `${WEBAPP_URL}/login?callbackUrl=${encodeURIComponent(WEBAPP_URL + request.nextUrl.pathname + request.nextUrl.search)}`;
       return NextResponse.redirect(loginUrl);
+    }
+
+    if (isAuthenticated) {
+      const sessionId = request.cookies.get(appConfig.sessionId)?.value;
+
+      if (sessionId && userId) {
+        try {
+          const response = await fetch(
+            `${WEBAPP_URL}/api/get-user-session?userId=${userId}&sessionId=${sessionId}`,
+            { method: 'GET' }
+          );
+          const data = await response.json();
+
+          if (!data.isValid) {
+            deleteCookie(appConfig.cookieName);
+            deleteCookie(appConfig.sessionId);
+            return NextResponse.redirect(`${WEBAPP_URL}/login`);
+          }
+        } catch (error) {
+          console.error("Session check error:", error);
+          deleteCookie(appConfig.cookieName);
+          deleteCookie(appConfig.sessionId);
+          return NextResponse.redirect(`${WEBAPP_URL}/login`);
+        }
+      }
     }
   }
 

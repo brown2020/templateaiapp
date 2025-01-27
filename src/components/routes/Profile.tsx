@@ -27,10 +27,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { UserSessionCard } from "../UserSessionCard";
+import { useAuthStore } from "@/zustand/useAuthStore";
 
 export function Profile() {
     const [loading, setLoading] = useState(false);
-    const { user, signOut, metadata } = useAuth();
+    const { user, signOut, metadata, signOutSession, removeSession } = useAuth();
+    const sessions = useAuthStore((state) => state.sessions);
     const router = useRouter();
     const {
         profile: storeProfile,
@@ -109,7 +112,7 @@ export function Profile() {
                             <div className="flex items-center">
                                 {metadata?.photoURL ? (
                                     <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
-                                        <AvatarImage src={metadata.photoURL} alt="Profile" />
+                                        <AvatarImage src={metadata?.photoURL} alt="Profile" />
                                         <AvatarFallback>
                                             {metadata.displayName?.charAt(0)}
                                         </AvatarFallback>
@@ -318,6 +321,19 @@ export function Profile() {
                                 </div>
                             </CardContent>
                         </Card>
+                    </div>
+
+                    {/* Active Sessions */}
+                    <div className="px-3 py-4 sm:p-6 border-t border-gray-200 dark:border-gray-700">
+                        <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <User className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500" />
+                            Active Sessions
+                        </h2>
+                        <div className="space-y-4">
+                            {sessions?.sort((a, b) => b.currentSession ? 1 : a.currentSession ? -1 : 0).map((session, index) => (
+                                <UserSessionCard session={session} key={index} onSignOut={signOutSession} onRemove={removeSession} />
+                            ))}
+                        </div>
                     </div>
 
                     {/* Account Settings Section */}

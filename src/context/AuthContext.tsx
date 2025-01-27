@@ -10,6 +10,7 @@ import {
   signOut as firebaseSignOut,
   onIdTokenChanged,
   getIdTokenResult,
+  onAuthStateChanged,
 } from "firebase/auth";
 import { auth, db } from "@/firebase/firebaseConfig";
 import {
@@ -18,6 +19,10 @@ import {
   getDoc,
   serverTimestamp,
   Timestamp,
+  getDocs,
+  collection,
+  updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { setCookie, deleteCookie } from "cookies-next";
 import { appConfig } from "@/appConfig";
@@ -25,14 +30,10 @@ import { appConfig } from "@/appConfig";
 // Import your Zustand auth store
 import { useAuthStore } from "@/zustand/useAuthStore";
 import useProfileStore from "@/zustand/useProfileStore";
+import { detectBrowser, detectOS, generateUuid, getUserLocation } from "@/utils/user";
+import { UserMetadata, UserSession } from "@/types/auth";
+import { getCookie } from "cookies-next/client";
 
-export interface UserMetadata {
-  createdAt: Date;
-  lastLoginAt: Date;
-  displayName?: string;
-  email?: string;
-  photoURL?: string;
-}
 
 export interface AuthContextType {
   user: User | null;
@@ -45,6 +46,8 @@ export interface AuthContextType {
   signInWithGoogle: () => Promise<User>;
   signOut: () => Promise<void>;
   updateUserRole: (isAdmin: boolean) => Promise<void>;
+  signOutSession: (sessionId: string) => Promise<void>;
+  removeSession: (sessionId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -52,12 +55,14 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   console.log("[AuthProvider] Rendering AuthProvider...");
   const { updateProfile } = useProfileStore();
+  const setAuthDetails = useAuthStore((state) => state.setAuthDetails);
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [metadata, setMetadata] = useState<UserMetadata | null>(null);
+  // const [sessions, setSessions] = useState<UserSession[] | null>(null);
 
   const updateUserMetadata = async (user: User, isNewUser = false) => {
     console.log(
@@ -129,6 +134,123 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUserSession = async (user: User, isActive: boolean) => {
+    if (!user.uid) {
+      console.warn("[updateUserSession] No user.uid found, returning early.");
+      return;
+    }
+
+    try {
+      const sessionsCollectionRef = collection(db, "users", user.uid, "sessions");
+      const now = new Date();
+
+      let sessionId = getCookie(appConfig.sessionId);
+      if (!sessionId) {
+        sessionId = generateUuid();
+        setCookie(appConfig.sessionId, sessionId, {
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 7 * 24 * 60 * 60, // 7 days
+        });
+      }
+
+      const deviceInfo = {
+        location: await getUserLocation() ?? null,
+        os: detectOS() ?? null,
+        browser: detectBrowser(),
+        sessionId
+      };
+
+      const sessionsSnapshot = await getDocs(sessionsCollectionRef);
+      const allSessions: UserSession[] = [];
+
+      // Process all sessions
+      sessionsSnapshot.forEach((doc) => {
+        const sessionData = doc.data();
+        allSessions.push({
+          isActive: sessionData.isActive,
+          createdAt: sessionData.createdAt instanceof Timestamp
+            ? sessionData.createdAt.toDate()
+            : now,
+          lastLoginAt: sessionData.lastLoginAt instanceof Timestamp
+            ? sessionData.lastLoginAt.toDate()
+            : now,
+          deviceInfo: sessionData.deviceInfo,
+          currentSession: sessionData.deviceInfo.sessionId === sessionId
+        });
+      });
+
+      // Check if a session with this ID already exists
+      const existingSessionRef = doc(sessionsCollectionRef, sessionId);
+      const existingSessionDoc = await getDoc(existingSessionRef);
+
+      if (existingSessionDoc.exists()) {
+        // Update existing session
+        await updateDoc(existingSessionRef, {
+          lastLoginAt: serverTimestamp(),
+          deviceInfo,
+          isActive
+        });
+        console.log("[updateUserSession] Updated existing session document:", sessionId);
+
+        const sessionIndex = allSessions.findIndex(
+          s => s.deviceInfo.sessionId === sessionId
+        );
+        if (sessionIndex !== -1) {
+          allSessions[sessionIndex] = {
+            isActive,
+            createdAt: existingSessionDoc.data().createdAt instanceof Timestamp
+              ? existingSessionDoc.data().createdAt.toDate()
+              : now,
+            lastLoginAt: now,
+            deviceInfo,
+            currentSession: true
+          };
+        }
+      } else {
+        // Create new session
+        const sessionData = {
+          lastLoginAt: serverTimestamp(),
+          deviceInfo,
+          createdAt: serverTimestamp(),
+          isActive,
+        };
+
+        // Use the sessionId from cookies as the document ID
+        await setDoc(existingSessionRef, sessionData);
+        console.log("[updateUserSession] Added new session document:", sessionId);
+
+        allSessions.push({
+          isActive,
+          createdAt: now,
+          lastLoginAt: now,
+          deviceInfo,
+          currentSession: true
+        });
+      }
+
+      // ***** UPDATE ZUSTAND HERE *****
+      setAuthDetails({ sessions: allSessions });
+
+      console.log("[updateUserSession] Session state updated:", {
+        sessionId,
+        deviceInfo
+      });
+    } catch (err) {
+      console.error("[updateUserSession] Error updating user sessions:", err);
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await updateUserSession(user, true);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Handle token changes and admin status
   useEffect(() => {
     console.log("[AuthProvider] Setting up onIdTokenChanged listener...");
@@ -189,6 +311,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "[onIdTokenChanged] firebaseUser is null. Clearing user & cookie."
         );
         deleteCookie(appConfig.cookieName);
+        deleteCookie(appConfig.sessionId);
         setUser(null);
         setIsAdmin(false);
         setMetadata(null);
@@ -296,11 +419,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    console.log("[signOut] Called");
     try {
       setError(null);
+      if (user) {
+        await updateUserSession(user, false);
+      }
       await firebaseSignOut(auth);
       deleteCookie(appConfig.cookieName);
+      deleteCookie(appConfig.sessionId);
 
       setUser(null);
       setIsAdmin(false);
@@ -322,6 +448,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   };
+
+  const signOutSession = async (sessionId: string) => {
+    if (!user?.uid) {
+      console.warn("[signOutSession] No user.uid found, returning early.");
+      return;
+    }
+    const sessionsRef = doc(db, "users", user?.uid, "sessions", sessionId);
+    try {
+      await updateDoc(sessionsRef, {
+        isActive: false,
+        lastLoginAt: serverTimestamp()
+      });
+
+      // ***** UPDATE ZUSTAND HERE *****
+      const allSessions = useAuthStore.getState().sessions;
+      const updatedSessions = allSessions.map(session => {
+        if (session.deviceInfo.sessionId === sessionId) {
+          return { ...session, isActive: false };
+        }
+        return session;
+      });
+      setAuthDetails({ sessions: updatedSessions });
+
+      console.log("[signOutSession] Session marked as inactive:", sessionId);
+    } catch (err) {
+      console.error("[signOutSession] Error updating session:", err);
+      throw err;
+    }
+  }
+
+  const removeSession = async (sessionId: string) => {
+    if (!user?.uid) {
+      console.warn("[removeSession] No user.uid found, returning early.");
+      return;
+    }
+    const sessionsRef = doc(db, "users", user?.uid, "sessions", sessionId);
+    try {
+      // Delete the session document from Firebase
+      await deleteDoc(sessionsRef);
+
+      // Update Zustand state by filtering out the removed session
+      const allSessions = useAuthStore.getState().sessions;
+      const updatedSessions = allSessions.filter(session =>
+        session.deviceInfo.sessionId !== sessionId
+      );
+      setAuthDetails({ sessions: updatedSessions });
+
+      console.log("[removeSession] Session removed:", sessionId);
+    } catch (err) {
+      console.error("[removeSession] Error removing session:", err);
+      throw err;
+    }
+  }
 
   const updateUserRole = async (newIsAdmin: boolean) => {
     console.log("[updateUserRole] Called with newIsAdmin:", newIsAdmin);
@@ -367,6 +546,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGoogle,
     signOut,
     updateUserRole,
+    signOutSession,
+    removeSession
   };
 
   console.log(
