@@ -1,3 +1,5 @@
+import { BarChart3, Calendar, Globe, Paintbrush, PieChart, Users } from "lucide-react";
+
 export const appConfig = {
   cookieName: "app_auth_token",
   title: "Template App",
@@ -30,22 +32,26 @@ export const appConfig = {
     ],
   },
   help: {
+    visible: true,
     sections: [
       {
         title: "Getting Started",
         items: [
           {
             question: "How do I create an account?",
+            displayInLanding: true,
             answer:
               "Click the Sign Up button and follow the registration process using your email or Google account.",
           },
           {
             question: "What are the system requirements?",
+            displayInLanding: true,
             answer:
               "Our app works on any modern web browser with JavaScript enabled.",
           },
           {
             question: "Is my data secure?",
+            displayInLanding: true,
             answer:
               "Yes, we use industry-standard encryption and security practices to protect your data.",
           },
@@ -56,11 +62,13 @@ export const appConfig = {
         items: [
           {
             question: "How do I reset my password?",
+            displayInLanding: false,
             answer:
               "Click the 'Forgot Password' link on the login page and follow the instructions sent to your email.",
           },
           {
             question: "Can I change my email address?",
+            displayInLanding: false,
             answer:
               "Your email address is your unique identifier and cannot be changed. Please contact support if you need assistance.",
           },
@@ -71,11 +79,13 @@ export const appConfig = {
         items: [
           {
             question: "What features are included in my plan?",
+            displayInLanding: false,
             answer:
               "Visit the Pricing page to see a detailed comparison of features available in each plan.",
           },
           {
             question: "How do I upgrade my account?",
+            displayInLanding: true,
             answer:
               "Go to Settings > Subscription to view and manage your plan options.",
           },
@@ -141,12 +151,14 @@ export const appConfig = {
     ],
   },
   pricing: {
+    visible: true,
     currency: "USD",
+    intervals: ["month", "year"],
     plans: [
       {
         name: "Free",
-        price: 0,
-        interval: "month",
+        description: "Best for content creators",
+        price: { month: 0, year: 0 },
         features: [
           "Basic features",
           "Up to 1,000 requests/month",
@@ -158,8 +170,8 @@ export const appConfig = {
       },
       {
         name: "Pro",
-        price: 29,
-        interval: "month",
+        description: "Best for large businesses",
+        price: { month: 29, year: 290 },
         features: [
           "All Free features",
           "Up to 50,000 requests/month",
@@ -172,8 +184,8 @@ export const appConfig = {
       },
       {
         name: "Enterprise",
-        price: 99,
-        interval: "month",
+        description: "Best for agencies",
+        price: { month: 99, year: 990 },
         features: [
           "All Pro features",
           "Unlimited requests",
@@ -192,6 +204,134 @@ export const appConfig = {
     nameSave: "app_name_save",
     passwordPassed: "app_password_passed",
   },
+  testimonials: {
+    visible: true,
+    data: [
+      {
+        name: "Jack Smith",
+        body: "This platform is very easy to use, which makes managing your posts simple. It has helpful tools that let you schedule and organize your content without any hassle. Plus, it allows you to connect and build relationships with your audience, encouraging more interaction. With insights into how your audience behaves and what they like, you can adjust your content to better meet their needs and grow your community. Overall, this platform helps you strengthen your online presence and make your interactions more personal.",
+        img: "https://avatar.vercel.sh/jack",
+      },
+      {
+        name: "Jill Smith",
+        body: "There are several things I love about this suite. Some of these things include - Ease of use - Helps me organize my social media accounts - I get work done faster - It does not consume my time - it has a professional interface",
+        img: "https://avatar.vercel.sh/jill",
+      },
+      {
+        name: "James Wilson",
+        body: "As a privacy-first company we appreciate being able to self-host Template App! It brings all the core functionality of a social media scheduler plus a lot of AI to make things faster. It's also very easy to deploy and use, great work!",
+        img: "https://avatar.vercel.sh/john",
+      },
+      {
+        name: "Michael Anderson",
+        body: "Omg! This is my absolutely favorite app this 2024 when it comes to social managing-saves me hours every week hassle free.",
+        img: "https://avatar.vercel.sh/john",
+      },
+      {
+        name: "Sarah Johnson",
+        body: "Template App is fantastic! It makes social media management so easy. The AI tools for content creation and scheduling are a huge time-saver. I love the built-in design features and how simple it is to manage everything in one place. Highly recommend for anyone looking to streamline their social media tasks!",
+        img: "https://avatar.vercel.sh/john",
+      },
+      {
+        name: "David Williams",
+        body: "as a user of Template App as a digital marketer, I liked it much because with Template App I managed things best and made my work easier.",
+        img: "https://avatar.vercel.sh/john",
+      },
+      {
+        name: "Maria Camila A.",
+        body: "Template App changed how we manage our social media presence by aggregating our platforms into one effective tool. Post scheduling, and AI post ideation are two of the many features that come with Template App, and have made our management of social media simple and effective! Highly recommend",
+        img: "https://avatar.vercel.sh/john",
+      },
+    ]
+  },
+  reviews: {
+    visible: true,
+    data: [
+      {
+        name: "Jack",
+        username: "@jack",
+        body: "I've never seen anything like this before. It's amazing. I love it.",
+        img: "https://avatar.vercel.sh/jack",
+      },
+      {
+        name: "Jill",
+        username: "@jill",
+        body: "I don't know what to say. I'm speechless. This is amazing.",
+        img: "https://avatar.vercel.sh/jill",
+      },
+      {
+        name: "John",
+        username: "@john",
+        body: "I'm at a loss for words. This is amazing. I love it.",
+        img: "https://avatar.vercel.sh/john",
+      },
+      {
+        name: "Jane",
+        username: "@jane",
+        body: "I'm at a loss for words. This is amazing. I love it.",
+        img: "https://avatar.vercel.sh/jane",
+      },
+      {
+        name: "Jenny",
+        username: "@jenny",
+        body: "I'm at a loss for words. This is amazing. I love it.",
+        img: "https://avatar.vercel.sh/jenny",
+      },
+      {
+        name: "James",
+        username: "@james",
+        body: "I'm at a loss for words. This is amazing. I love it.",
+        img: "https://avatar.vercel.sh/james",
+      },
+    ]
+  },
+  features: {
+    visible: true,
+    data: [
+      {
+        title: "Seamless scheduling",
+        description: "Schedule, analyze, and engage with your audience. Cross post your social media posts into multiple channels.",
+        icon: Calendar,
+        tag: "PLANNING",
+        size: "lg"
+      },
+      {
+        title: "AI Content assistant",
+        description: "Improve your content creation process with AI Agent that performs all tasks for you.",
+        icon: PieChart,
+        tag: "ARTIFICIAL INTELLIGENCE",
+        size: "lg"
+      },
+      {
+        title: "Design it with AI",
+        description: "Use a Canva-like tool to create stunning visuals for your social media posts and generate pictures with AI.",
+        icon: Paintbrush,
+        tag: "AI IMAGE",
+        size: "lg"
+      },
+      {
+        title: "Teamwork organization",
+        description: "Manage your social media channels with ease. Collaborate with your team and delegate tasks.",
+        icon: Users,
+        tag: "ORGANIZING",
+        size: "sm"
+      },
+      {
+        title: "Extensive marketplace",
+        description: "Expose your brand to a wider audience by connecting with influencers and brands. ALL FROM THE PLATFORM.",
+        icon: Globe,
+        tag: "EXPOSE",
+        size: "sm"
+      },
+      {
+        title: "Comprehensive analytics",
+        description: "Learn from your data and improve your social media strategy. Track your performance and optimize your content.",
+        icon: BarChart3,
+        tag: "ANALYTICS",
+        size: "lg"
+      }
+    ]
+  }
 };
 
 // Routes that require authentication
@@ -205,7 +345,7 @@ export const privatePaths = [
 ];
 
 // Routes that require admin privileges
-export const adminPaths = ["/admin", "/admin/users", "/admin/settings"];
+export const adminPaths = ["/admin", "/admin/dashboard", "/admin/users", "/admin/settings"];
 
 // Routes that are publicly accessible
 export const publicPaths = [

@@ -3,120 +3,166 @@
 import { useAuth } from "@/context/AuthContext";
 import { appConfig } from "@/appConfig";
 import Link from "next/link";
-import { ArrowRight, Shield, Zap, Code2, Cloud } from "lucide-react";
+import { ArrowRight, Shield, Zap, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import FeaturesSection from "./FeaturesSection";
+import ReviewsSection from "./ReviewsSection";
+import TestimonialsSection from "./TestimonialsSection";
+import FAQSection from "./FAQSection";
+import GrowthSection from "./GrowthSection";
+import PricingSection from "./PricingSection";
 
 export default function HomePage() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-grid-white/10 bg-grid-pattern dark:bg-grid-slate-800/10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 to-violet-600/90 dark:from-blue-900/90 dark:to-violet-900/90" />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-28">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <Badge
+              variant="outline"
+              className="bg-white/10 text-white border-white/20 backdrop-blur-sm mb-6 dark:bg-slate-800/20 dark:text-slate-200 dark:border-slate-600"
+            >
+              ✨ Welcome to the future of development
+            </Badge>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white bg-clip-text dark:text-slate-100">
               {appConfig.title}
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-blue-100">
+            <p className="text-xl md:text-2xl mb-10 text-white/80 max-w-3xl mx-auto dark:text-slate-300">
               {appConfig.description}
             </p>
             {!user && (
-              <div className="flex justify-center gap-4">
-                <Link
-                  href="/signup"
-                  className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <Button
+                  size="lg"
+                  variant="default"
+                  className="bg-white text-blue-600 hover:bg-white/90 dark:bg-white dark:text-blue-600 dark:hover:bg-white/90"
                 >
-                  Get Started
-                </Link>
-                <Link
-                  href="/login"
-                  className="bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+                  <Link href="/signup" className="flex items-center gap-2">
+                    Get Started <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-white hover:bg-white/10 dark:border-slate-600 ho"
                 >
-                  Sign In
-                </Link>
+                  <Link href="/login">Sign In</Link>
+                </Button>
               </div>
             )}
             {user && (
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+              <Button
+                size="lg"
+                variant="default"
+                className="bg-white text-blue-600 hover:bg-white/90 dark:bg-white dark:text-blue-600 dark:hover:bg-white/90"
               >
-                Go to Dashboard
-                <ArrowRight className="w-5 h-5" />
-              </Link>
+                <Link href="/dashboard" className="flex items-center gap-2">
+                  Go to Dashboard <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
             )}
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Why Choose {appConfig.title}?
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <FeatureCard
-              icon={<Shield className="w-6 h-6" />}
-              title="Secure"
-              description="Built with security best practices and user privacy in mind"
-            />
-            <FeatureCard
-              icon={<Zap className="w-6 h-6" />}
-              title="Fast"
-              description="Optimized performance for the best user experience"
-            />
-            <FeatureCard
-              icon={<Code2 className="w-6 h-6" />}
-              title="Modern Stack"
-              description="Built with Next.js, TypeScript, and Tailwind CSS"
-            />
-            <FeatureCard
-              icon={<Cloud className="w-6 h-6" />}
-              title="Scalable"
-              description="Cloud-native architecture that grows with your needs"
-            />
-          </div>
-        </div>
-      </section>
+      <FeaturesSection />
+
+      {/* Reviews Section */}
+      {appConfig.reviews.visible && <ReviewsSection />}
+
+      {/* Growth Section */}
+      {appConfig.features.visible && <GrowthSection />}
+
+      {/* Testimonials Section */}
+      {appConfig.testimonials.visible && <TestimonialsSection />}
 
       {/* CTA Section */}
       {!user && (
-        <section className="bg-gray-50 py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold mb-8">Ready to Get Started?</h2>
-            <p className="text-xl text-gray-600 mb-8">
-              Join thousands of users who trust {appConfig.title} for their
-              needs.
-            </p>
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Create Your Account
-              <ArrowRight className="w-5 h-5" />
-            </Link>
+        <section className="relative py-8 overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute inset-0 bg-slate-50 dark:bg-slate-950">
+            <div className="absolute inset-0 bg-grid-slate-200/50 dark:bg-grid-slate-800/50 [mask-image:radial-gradient(ellipse_at_center,white,transparent)]" />
+          </div>
+          {/* Dynamic background with gradient overlay */}
+          <div className="p-8 lg:p-12 bg-gradient-to-r from-blue-600/10 to-violet-600/10 dark:from-blue-900/10 dark:to-violet-900/10 backdrop-blur-sm border border-gray-200/20 dark:border-gray-700/20">
+            <div className="text-center">
+              <h2 className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">
+                Ready to Transform Your Development?
+              </h2>
+
+              <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+                Join thousands of developers who trust {appConfig.title} for
+                building modern applications with confidence and speed.
+              </p>
+
+              <div className="relative inline-block group">
+                <div className="absolute -inset-1 rounded-lg bg-gradient-to-r from-blue-600 to-violet-600 opacity-50 group-hover:opacity-70 blur transition duration-200" />
+                <Link
+                  href="/signup"
+                  className="relative inline-flex items-center gap-2 px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-violet-600 rounded-lg hover:from-blue-700 hover:to-violet-700 transition-all duration-200 hover:-translate-y-0.5"
+                >
+                  Create Your Account
+                  <ArrowRight className="w-5 h-5 animate-bounce-x" />
+                </Link>
+              </div>
+
+              {/* Trust indicators */}
+              <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  Enterprise-grade Security
+                </div>
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5" />
+                  Lightning-fast Performance
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Active Community
+                </div>
+              </div>
+            </div>
           </div>
         </section>
-      )}
-    </div>
+      )
+      }
+
+      {/* Pricing Section */}
+      {appConfig.pricing.visible && <PricingSection />}
+
+      {/* FAQ Section */}
+      {appConfig.help.visible && <FAQSection />}
+    </div >
   );
 }
 
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex flex-col items-center text-center p-6 rounded-lg border border-gray-100 hover:shadow-lg transition-shadow">
-      <div className="text-blue-600 mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
-    </div>
-  );
-}
+// function FeatureCard({
+//   icon,
+//   title,
+//   description,
+// }: {
+//   icon: React.ReactNode;
+//   title: string;
+//   description: string;
+// }) {
+//   return (
+//     <Card className="group hover:shadow-lg transition-all duration-300">
+//       <CardContent className="p-6">
+//         <div className="bg-blue-50 rounded-lg p-3 w-fit mb-4 group-hover:bg-blue-100 transition-colors">
+//           <div className="text-blue-600">{icon}</div>
+//         </div>
+//         <h3 className="text-xl font-semibold mb-2">{title}</h3>
+//         <p className="text-gray-600">{description}</p>
+//       </CardContent>
+//     </Card>
+//   );
+// }

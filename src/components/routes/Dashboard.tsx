@@ -4,32 +4,20 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { getUserProfile } from "@/utils/user";
 import { handleError } from "@/utils/errorHandler";
-import LoadingSpinner from "./LoadingSpinner";
+import LoadingSpinner from "../LoadingSpinner";
 import Link from "next/link";
 import { UserProfile } from "@/types";
+import moment from "moment";
 
-function formatDate(date: string | number | Date | undefined | null): string {
-  if (!date) return "N/A";
-  const d = new Date(date);
-  if (isNaN(d.getTime())) {
-    return "N/A";
-  }
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(d);
-}
-
-export default function DashboardComponent() {
-  const { user, metadata } = useAuth();
+export function Dashboard() {
+  const { user, isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user?.uid) return;
+    if (!user?.uid) return;
 
+    const fetchProfile = async () => {
       try {
         const userProfile = await getUserProfile(user.uid);
         setProfile(userProfile);
@@ -42,6 +30,7 @@ export default function DashboardComponent() {
 
     fetchProfile();
   }, [user?.uid]);
+  console.log('profile:>> ', profile);
 
   if (loading) {
     return (
@@ -54,12 +43,12 @@ export default function DashboardComponent() {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 className="text-2xl font-semibold mb-4">
           Welcome back,{" "}
           {profile?.displayName || user?.email?.split("@")[0] || "User"}!
         </h2>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-300">
           {profile?.bio ||
             "Complete your profile to personalize your experience."}
         </p>
@@ -87,7 +76,6 @@ export default function DashboardComponent() {
             </svg>
           }
         />
-
         <QuickActionCard
           title="Settings"
           description="Manage your account settings and preferences"
@@ -114,7 +102,6 @@ export default function DashboardComponent() {
             </svg>
           }
         />
-
         <QuickActionCard
           title="Help"
           description="Get help and support for any questions"
@@ -138,25 +125,23 @@ export default function DashboardComponent() {
       </div>
 
       {/* Account Overview */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold mb-4">Account Overview</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">Email</p>
-            <p className="font-medium">{user?.email}</p>
-          </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">Member Since</p>
-            <p className="font-medium">{formatDate(metadata?.createdAt)}</p>
-          </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">Last Login</p>
-            <p className="font-medium">{formatDate(metadata?.lastLoginAt)}</p>
-          </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">Account Type</p>
-            <p className="font-medium capitalize">{profile?.role || "User"}</p>
-          </div>
+          {[
+            { label: "Email", value: user?.email },
+            { label: "Member Since", value: moment(user?.metadata.creationTime).format('LLL') },
+            { label: "Last Login", value: moment(user?.metadata.lastSignInTime).format('LLL') },
+            { label: "Account Type", value: isAdmin ? "Admin" : "User" },
+          ].map((item, index) => (
+            <div
+              key={index}
+              className="p-4 bg-gray-50 dark:bg-gray-600 rounded-lg"
+            >
+              <p className="text-sm text-gray-600 dark:text-gray-300">{item.label}</p>
+              <p className="font-medium dark:text-gray-100">{item.value}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -177,7 +162,7 @@ function QuickActionCard({
   return (
     <Link
       href={href}
-      className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200"
+      className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow duration-200"
     >
       <div className="flex items-center mb-3">
         <div className="p-2 bg-blue-100 rounded-lg text-blue-600 mr-3">
@@ -185,7 +170,7 @@ function QuickActionCard({
         </div>
         <h3 className="font-semibold">{title}</h3>
       </div>
-      <p className="text-gray-600 text-sm">{description}</p>
+      <p className="text-gray-600 dark:text-gray-400 text-sm">{description}</p>
     </Link>
   );
 }
