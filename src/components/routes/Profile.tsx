@@ -29,10 +29,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { UserSessionCard } from "../UserSessionCard";
 import { useAuthStore } from "@/zustand/useAuthStore";
+import LoadingSpinner from "../LoadingSpinner";
 
 export function Profile() {
     const [loading, setLoading] = useState(false);
     const { user, signOut, metadata, signOutSession, removeSession } = useAuth();
+    const authLoaders = useAuthStore((state) => state.authLoaders);
     const sessions = useAuthStore((state) => state.sessions);
     const router = useRouter();
     const {
@@ -329,11 +331,20 @@ export function Profile() {
                             <User className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500" />
                             Active Sessions
                         </h2>
-                        <div className="space-y-4">
-                            {sessions?.sort((a, b) => b.currentSession ? 1 : a.currentSession ? -1 : 0).map((session, index) => (
-                                <UserSessionCard session={session} key={index} onSignOut={signOutSession} onRemove={removeSession} />
-                            ))}
-                        </div>
+                        {authLoaders.session ? (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 justify-center">
+                                    <LoadingSpinner size="sm" />
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Loading sessions...</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {sessions?.sort((a, b) => b.currentSession ? 1 : a.currentSession ? -1 : 0).map((session, index) => (
+                                    <UserSessionCard session={session} key={index} onSignOut={signOutSession} onRemove={removeSession} />
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Account Settings Section */}

@@ -10,7 +10,7 @@ import {
   signOut as firebaseSignOut,
   onIdTokenChanged,
   getIdTokenResult,
-  onAuthStateChanged,
+  sendSignInLinkToEmail,
 } from "firebase/auth";
 import { auth, db } from "@/firebase/firebaseConfig";
 import {
@@ -19,10 +19,10 @@ import {
   getDoc,
   serverTimestamp,
   Timestamp,
-  getDocs,
   collection,
   updateDoc,
   deleteDoc,
+  onSnapshot,
 } from "firebase/firestore";
 import { setCookie, deleteCookie } from "cookies-next";
 import { appConfig } from "@/appConfig";
@@ -33,7 +33,11 @@ import useProfileStore from "@/zustand/useProfileStore";
 import { detectBrowser, detectOS, generateUuid, getUserLocation } from "@/utils/user";
 import { UserMetadata, UserSession } from "@/types/auth";
 import { getCookie } from "cookies-next/client";
-
+import { isValidCallbackUrl } from "@/utils/url";
+import { useRouter } from "next/navigation";
+import { WEBAPP_URL } from "@/utils/constants";
+import toast from "react-hot-toast";
+import { getFirebaseErrorMessage } from "@/utils/errorHandler";
 
 export interface AuthContextType {
   user: User | null;
@@ -48,21 +52,24 @@ export interface AuthContextType {
   updateUserRole: (isAdmin: boolean) => Promise<void>;
   signOutSession: (sessionId: string) => Promise<void>;
   removeSession: (sessionId: string) => Promise<void>;
+  updateUserSession: (user: User, isActive: boolean) => Promise<string | undefined>;
+  handlePasswordlessSignIn: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   console.log("[AuthProvider] Rendering AuthProvider...");
+  const router = useRouter();
   const { updateProfile } = useProfileStore();
   const setAuthDetails = useAuthStore((state) => state.setAuthDetails);
+  const setAuthLoaders = useAuthStore((state) => state.setAuthLoaders);
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [metadata, setMetadata] = useState<UserMetadata | null>(null);
-  // const [sessions, setSessions] = useState<UserSession[] | null>(null);
 
   const updateUserMetadata = async (user: User, isNewUser = false) => {
     console.log(
@@ -134,38 +141,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateUserSession = async (user: User, isActive: boolean) => {
+  const updateUserSession = async (user: User) => {
     if (!user.uid) {
       console.warn("[updateUserSession] No user.uid found, returning early.");
       return;
     }
+    let sessionId = getCookie(appConfig.sessionId);
+    if (!sessionId) {
+      sessionId = generateUuid();
+    }
 
     try {
-      const sessionsCollectionRef = collection(db, "users", user.uid, "sessions");
-      const now = new Date();
-
-      let sessionId = getCookie(appConfig.sessionId);
-      if (!sessionId) {
-        sessionId = generateUuid();
-        setCookie(appConfig.sessionId, sessionId, {
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 7 * 24 * 60 * 60, // 7 days
-        });
-      }
-
+      // Create new session
       const deviceInfo = {
         location: await getUserLocation() ?? null,
         os: detectOS() ?? null,
         browser: detectBrowser(),
         sessionId
       };
+      const sessionData = {
+        lastLoginAt: serverTimestamp(),
+        deviceInfo,
+        createdAt: serverTimestamp(),
+        isActive: true,
+      };
 
-      const sessionsSnapshot = await getDocs(sessionsCollectionRef);
+      // Create new session in firestore
+      const sessionRef = doc(db, 'users', user.uid, 'sessions', sessionId);
+      await setDoc(sessionRef, sessionData);
+
+      // Set session cookie
+      setCookie(appConfig.sessionId, sessionId, {
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60, // 7 days
+      });
+
+      // Setup sessions listener
+      setupSessionsListener(user.uid, sessionId);
+
+      return sessionId;
+    } catch (err) {
+      console.error("[updateUserSession] Error updating user sessions:", err);
+      throw err;
+    }
+  };
+
+  const setupSessionsListener = (userId: string, currentSessionId: string | undefined) => {
+    const sessionsRef = collection(db, "users", userId, "sessions");
+    setAuthLoaders({ session: true });
+    return onSnapshot(sessionsRef, (snapshot) => {
+      const now = new Date();
       const allSessions: UserSession[] = [];
 
-      // Process all sessions
-      sessionsSnapshot.forEach((doc) => {
+      snapshot.forEach((doc) => {
         const sessionData = doc.data();
         allSessions.push({
           isActive: sessionData.isActive,
@@ -176,79 +205,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             ? sessionData.lastLoginAt.toDate()
             : now,
           deviceInfo: sessionData.deviceInfo,
-          currentSession: sessionData.deviceInfo.sessionId === sessionId
+          currentSession: sessionData.deviceInfo.sessionId === currentSessionId
         });
       });
 
-      // Check if a session with this ID already exists
-      const existingSessionRef = doc(sessionsCollectionRef, sessionId);
-      const existingSessionDoc = await getDoc(existingSessionRef);
-
-      if (existingSessionDoc.exists()) {
-        // Update existing session
-        await updateDoc(existingSessionRef, {
-          lastLoginAt: serverTimestamp(),
-          deviceInfo,
-          isActive
-        });
-        console.log("[updateUserSession] Updated existing session document:", sessionId);
-
-        const sessionIndex = allSessions.findIndex(
-          s => s.deviceInfo.sessionId === sessionId
-        );
-        if (sessionIndex !== -1) {
-          allSessions[sessionIndex] = {
-            isActive,
-            createdAt: existingSessionDoc.data().createdAt instanceof Timestamp
-              ? existingSessionDoc.data().createdAt.toDate()
-              : now,
-            lastLoginAt: now,
-            deviceInfo,
-            currentSession: true
-          };
-        }
-      } else {
-        // Create new session
-        const sessionData = {
-          lastLoginAt: serverTimestamp(),
-          deviceInfo,
-          createdAt: serverTimestamp(),
-          isActive,
-        };
-
-        // Use the sessionId from cookies as the document ID
-        await setDoc(existingSessionRef, sessionData);
-        console.log("[updateUserSession] Added new session document:", sessionId);
-
-        allSessions.push({
-          isActive,
-          createdAt: now,
-          lastLoginAt: now,
-          deviceInfo,
-          currentSession: true
-        });
-      }
-
-      // ***** UPDATE ZUSTAND HERE *****
       setAuthDetails({ sessions: allSessions });
-
-      console.log("[updateUserSession] Session state updated:", {
-        sessionId,
-        deviceInfo
-      });
-    } catch (err) {
-      console.error("[updateUserSession] Error updating user sessions:", err);
-    }
+      setAuthLoaders({ session: false });
+    });
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let sessionListener: any = null;
+    let sessionsListener: any = null;
+
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        await updateUserSession(user, true);
+        setUser(user);
+        let sessionId = getCookie(appConfig.sessionId);
+
+        try {
+          if (sessionId) {
+            // Listen for current session deletions
+            sessionListener = onSnapshot(
+              doc(db, `users/${user.uid}/sessions/${sessionId}`),
+              (snapshot) => {
+                if (!snapshot.exists() || snapshot.data()?.isActive == false) {
+                  console.log("[AuthProvider] Session was deleted or deactivated, signing out...");
+                  signOut();
+                  return;
+                }
+              },
+              (error) => {
+                console.error('[AuthProvider] Session listener error:', error);
+              }
+            );
+
+            // Setup sessions listener
+            sessionsListener = setupSessionsListener(user.uid, sessionId);
+          }
+        } catch (error) {
+          console.error('[AuthProvider] Error setting up session listeners:', error);
+        }
+      } else {
+        setUser(null);
+        if (sessionListener) {
+          sessionListener();
+          sessionListener = null;
+        }
+        if (sessionsListener) {
+          sessionsListener();
+          sessionsListener = null;
+        }
       }
+      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (sessionListener) {
+        sessionListener();
+      }
+      if (sessionsListener) {
+        sessionsListener();
+      }
+    };
   }, []);
 
   // Handle token changes and admin status
@@ -363,8 +383,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       const result = await signInWithEmailAndPassword(auth, email, password);
-      console.log("[signIn] Success, updating metadata...");
-      await updateUserMetadata(result.user);
+      await updateUserSession(result.user);
+      const searchParams = new URLSearchParams(window.location.search);
+      const callbackUrl = searchParams.get('callbackUrl');
+      await new Promise(resolve => setTimeout(resolve, 200));
+      if (callbackUrl && isValidCallbackUrl(callbackUrl, WEBAPP_URL)) {
+        router.push(callbackUrl);
+      } else {
+        router.push('/dashboard');
+      }
       return result.user;
     } catch (err) {
       if (err instanceof Error) {
@@ -386,6 +413,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
       console.log("[signUp] Success, updating metadata. isNewUser = true");
       await updateUserMetadata(result.user, true);
+      await updateUserSession(result.user);
       return result.user;
     } catch (err) {
       if (err instanceof Error) {
@@ -405,6 +433,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await signInWithPopup(auth, provider);
       console.log("[signInWithGoogle] Success, updating metadata...");
       await updateUserMetadata(result.user);
+      await updateUserSession(result.user);
       await updateProfile({
         email: result.user.email ?? "",
       });
@@ -418,11 +447,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handlePasswordlessSignIn = async (email: string) => {
+    if (!email) {
+      toast.error("Please enter your email address first");
+      return;
+    }
+    try {
+      const actionCodeSettings = {
+        url: `${window.location.origin}/loginfinish`,
+        handleCodeInApp: true,
+      };
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      window.localStorage.setItem(appConfig.storage.emailSave, email);
+      toast.success("Check your email for the sign-in link!");
+    } catch (error) {
+      toast.error(getFirebaseErrorMessage(error));
+    }
+  };
+
   const signOut = async () => {
     try {
       setError(null);
-      if (user) {
-        await updateUserSession(user, false);
+      const sessionId = getCookie(appConfig.sessionId);
+      if (sessionId) {
+        signOutSession(sessionId);
       }
       await firebaseSignOut(auth);
       deleteCookie(appConfig.cookieName);
@@ -454,14 +502,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.warn("[signOutSession] No user.uid found, returning early.");
       return;
     }
-    const sessionsRef = doc(db, "users", user?.uid, "sessions", sessionId);
+
     try {
+      const sessionsRef = doc(db, "users", user.uid, "sessions", sessionId);
       await updateDoc(sessionsRef, {
         isActive: false,
         lastLoginAt: serverTimestamp()
       });
 
-      // ***** UPDATE ZUSTAND HERE *****
+      const sessionDoc = await getDoc(sessionsRef);
+      if (!sessionDoc.exists()) {
+        throw new Error("Failed to update session status in Firestore");
+      }
+
+      //update zustand store
       const allSessions = useAuthStore.getState().sessions;
       const updatedSessions = allSessions.map(session => {
         if (session.deviceInfo.sessionId === sessionId) {
@@ -471,7 +525,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       setAuthDetails({ sessions: updatedSessions });
 
-      console.log("[signOutSession] Session marked as inactive:", sessionId);
+      console.log("[signOutSession] Session successfully marked as inactive:", sessionId);
     } catch (err) {
       console.error("[signOutSession] Error updating session:", err);
       throw err;
@@ -547,7 +601,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     updateUserRole,
     signOutSession,
-    removeSession
+    removeSession,
+    updateUserSession,
+    handlePasswordlessSignIn
   };
 
   console.log(

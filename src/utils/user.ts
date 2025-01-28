@@ -125,13 +125,3 @@ export async function getUserLocation() {
 export function generateUuid(): string {
   return uuidv4();
 }
-
-export async function validateSession(userId: string, sessionId: string): Promise<boolean> {
-  try {
-    const sessionDoc = await getDoc(doc(db, "users", userId, "sessions", sessionId));
-    return sessionDoc.exists() && sessionDoc.data()?.isActive === true;
-  } catch (error) {
-    console.error("Session validation error:", error);
-    return false;
-  }
-}

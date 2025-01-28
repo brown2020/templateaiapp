@@ -2,18 +2,15 @@
 
 "use client";
 
-import { useState } from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { sendSignInLinkToEmail } from "firebase/auth";
 import { Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-import { auth } from "@/firebase/firebaseConfig";
 import { useAuth } from "@/context/AuthContext";
-import { appConfig } from "@/appConfig";
 import { getFirebaseErrorMessage } from "@/utils/errorHandler";
 
 import { AuthPageLayout } from "@/components/AuthPageLayout";
@@ -25,11 +22,11 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { Button } from "@/components/ui/button";
 
 export function SignUp() {
-    const [loading, setLoading] = useState(false);
-    const [sendingLink, setSendingLink] = useState(false);
-    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const { signUp, signInWithGoogle, handlePasswordlessSignIn } = useAuth();
+    const [loading, startLoading] = useTransition();
+    const [sendingLink, setSendingLink] = useTransition();
+    const [isGoogleLoading, startIsGoogleLoading] = useTransition();
     const router = useRouter();
-    const { signUp, signInWithGoogle } = useAuth();
     const form = useForm<z.infer<typeof signUpSchema>>({
         resolver: zodResolver(signUpSchema),
         defaultValues: {
@@ -40,55 +37,36 @@ export function SignUp() {
     });
 
 
-    const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
-        console.log(values);
-        setLoading(true);
-        try {
-            await signUp(values.email, values.password);
-            toast.success("Account created successfully!");
-            router.push("/dashboard");
-        } catch (error) {
-            toast.error(getFirebaseErrorMessage(error));
-        } finally {
-            setLoading(false);
-        }
+    const onSubmit = (values: z.infer<typeof signUpSchema>) => {
+        startLoading(async () => {
+            try {
+                await signUp(values.email, values.password);
+                toast.success("Account created successfully!");
+                router.push("/dashboard");
+            } catch (error) {
+                toast.error(getFirebaseErrorMessage(error));
+            }
+        });
     };
 
 
-    const handlePasswordlessSignUp = async () => {
+    const handlePasswordless = async () => {
         const email = form.getValues("email");
-
-        if (!email) {
-            toast.error("Please enter your email address first");
-            return;
-        }
-        try {
-            setSendingLink(true);
-            const actionCodeSettings = {
-                url: `${window.location.origin}/loginfinish`,
-                handleCodeInApp: true,
-            };
-            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-            window.localStorage.setItem(appConfig.storage.emailSave, email);
-            toast.success("Check your email for the sign-in link!");
-        } catch (error) {
-            toast.error(getFirebaseErrorMessage(error));
-        } finally {
-            setSendingLink(false);
-        }
+        setSendingLink(async () => {
+            await handlePasswordlessSignIn(email);
+        })
     };
 
-    const handleGoogleSignIn = async () => {
-        setIsGoogleLoading(true);
-        try {
-            await signInWithGoogle();
-            toast.success("Account created successfully with Google!");
-            router.push("/dashboard");
-        } catch (error) {
-            toast.error(getFirebaseErrorMessage(error));
-        } finally {
-            setIsGoogleLoading(false);
-        }
+    const handleGoogleSignIn = () => {
+        startIsGoogleLoading(async () => {
+            try {
+                await signInWithGoogle();
+                toast.success("Account created successfully with Google!");
+                router.push("/dashboard");
+            } catch (error) {
+                toast.error(getFirebaseErrorMessage(error));
+            }
+        });
     };
 
     return (
@@ -121,7 +99,7 @@ export function SignUp() {
 
                     <Button
                         type="button"
-                        onClick={handlePasswordlessSignUp}
+                        onClick={handlePasswordless}
                         disabled={sendingLink}
                         loading={sendingLink}
                         variant="outline"

@@ -1,20 +1,17 @@
 // app/login/page.tsx
 "use client"
 
-import React, { useState } from "react";
+import React, { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {
     AuthError,
     sendPasswordResetEmail,
-    sendSignInLinkToEmail,
-    signInWithEmailAndPassword,
 } from "firebase/auth";
 import { Mail } from "lucide-react";
 
 import { auth } from "@/firebase/firebaseConfig";
 import { useAuth } from "@/context/AuthContext";
-import { appConfig } from "@/appConfig";
 import { getFirebaseErrorMessage } from "@/utils/errorHandler";
 
 import { AuthPageLayout } from "@/components/AuthPageLayout";
@@ -33,9 +30,10 @@ import { WEBAPP_URL } from "@/utils/constants";
 
 export function Login() {
     const router = useRouter();
-    const { signInWithGoogle } = useAuth();
-    const [loading, setLoading] = useState(false);
-    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const { signInWithGoogle, signIn, handlePasswordlessSignIn } = useAuth();
+    const [loading, startLoading] = useTransition();
+    const [sendingLink, setSendingLink] = useTransition();
+    const [isGoogleLoading, startIsGoogleLoading] = useTransition();
     const form = useForm<z.infer<typeof loginSchema>>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
@@ -60,63 +58,49 @@ export function Login() {
         }
     };
 
-    const handlePasswordlessSignIn = async () => {
+    const handlePasswordless = () => {
         const email = form.getValues("email");
-        if (!email) {
-            toast.error("Please enter your email address first");
-            return;
-        }
-        try {
-            const actionCodeSettings = {
-                url: `${window.location.origin}/loginfinish`,
-                handleCodeInApp: true,
-            };
-            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-            window.localStorage.setItem(appConfig.storage.emailSave, email);
-            toast.success("Check your email for the sign-in link!");
-        } catch (error) {
-            toast.error(getFirebaseErrorMessage(error));
-        }
+        setSendingLink(async () => {
+            await handlePasswordlessSignIn(email);
+        })
     };
 
-    const onSubmit = async (values: z.infer<typeof loginSchema>) => {
-        try {
-            setLoading(true);
-            await signInWithEmailAndPassword(auth, values.email, values.password);
-            toast.success("Successfully signed in!");
-            const searchParams = new URLSearchParams(window.location.search);
-            const callbackUrl = searchParams.get('callbackUrl');
-            await new Promise(resolve => setTimeout(resolve, 200));
-            if (callbackUrl && isValidCallbackUrl(callbackUrl, WEBAPP_URL)) {
-                router.push(callbackUrl);
-            } else {
-                router.push('/dashboard');
+    const onSubmit = (values: z.infer<typeof loginSchema>) => {
+        startLoading(async () => {
+            try {
+                await signIn(values.email, values.password);
+                const searchParams = new URLSearchParams(window.location.search);
+                const callbackUrl = searchParams.get('callbackUrl');
+
+                if (callbackUrl && isValidCallbackUrl(callbackUrl, WEBAPP_URL)) {
+                    router.push(callbackUrl);
+                } else {
+                    router.push('/dashboard');
+                }
+            } catch (error) {
+                toast.error(getFirebaseErrorMessage(error));
             }
-        } catch (error) {
-            toast.error(getFirebaseErrorMessage(error));
-            setLoading(false);
-        }
+        });
     };
 
-    const handleGoogleSignIn = async () => {
-        try {
-            setIsGoogleLoading(true);
-            await signInWithGoogle();
-            toast.success("Successfully logged in with Google!");
-            const searchParams = new URLSearchParams(window.location.search);
-            const callbackUrl = searchParams.get('callbackUrl');
+    const handleGoogleSignIn = () => {
+        startIsGoogleLoading(async () => {
+            try {
+                await signInWithGoogle();
+                toast.success("Successfully logged in with Google!");
+                const searchParams = new URLSearchParams(window.location.search);
+                const callbackUrl = searchParams.get('callbackUrl');
 
-            if (callbackUrl && isValidCallbackUrl(callbackUrl, WEBAPP_URL)) {
-                router.push(callbackUrl);
-            } else {
-                router.push('/dashboard');
+                if (callbackUrl && isValidCallbackUrl(callbackUrl, WEBAPP_URL)) {
+                    router.push(callbackUrl);
+                } else {
+                    router.push('/dashboard');
+                }
+            } catch (err) {
+                const error = err as AuthError;
+                toast.error(getFirebaseErrorMessage(error));
             }
-        } catch (err) {
-            const error = err as AuthError;
-            toast.error(getFirebaseErrorMessage(error));
-        } finally {
-            setIsGoogleLoading(false);
-        }
+        });
     };
 
     return (
@@ -253,8 +237,10 @@ export function Login() {
             {/* 3) Passwordless Sign-In (via email link) */}
             <Button
                 type="button"
-                onClick={handlePasswordlessSignIn}
+                onClick={handlePasswordless}
                 variant="outline"
+                loading={sendingLink}
+                disabled={sendingLink}
                 className="mt-4 w-full"
             >
                 <Mail className="h-5 w-5" />

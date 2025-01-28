@@ -20,14 +20,22 @@ interface AuthState {
   sessions: UserSession[];
 }
 
+interface AuthLoaderState {
+  authLoaders: {
+    session: boolean;
+  };
+}
+
+
 // Define the actions interface
 interface AuthActions {
   setAuthDetails: (details: Partial<AuthState>) => void;
+  setAuthLoaders: (loaders: Partial<AuthLoaderState['authLoaders']>) => void;
   clearAuthDetails: () => void;
 }
 
 // Combine the state and actions into one type
-type AuthStore = AuthState & AuthActions;
+type AuthStore = AuthState & AuthActions & AuthLoaderState;
 
 // Define the default state
 const defaultAuthState: AuthState = {
@@ -46,9 +54,16 @@ const defaultAuthState: AuthState = {
   sessions: [],
 };
 
+const defaultLoaderState: AuthLoaderState = {
+  authLoaders: {
+    session: false,
+  },
+};
+
 // Create the Zustand store
 export const useAuthStore = create<AuthStore>((set) => ({
   ...defaultAuthState,
+  ...defaultLoaderState,
 
   // Set authentication details
   setAuthDetails: async (details: Partial<AuthState>) => {
@@ -58,6 +73,14 @@ export const useAuthStore = create<AuthStore>((set) => ({
       updateUserDetailsInFirestore(details, newState.uid); // Call function to update Firestore
       return newState; // Update Zustand state
     });
+  },
+
+  // Set loader state
+  setAuthLoaders: (loaders: Partial<AuthLoaderState['authLoaders']>) => {
+    set((state) => ({
+      ...state,
+      authLoaders: { ...state.authLoaders, ...loaders },
+    }));
   },
 
   // Clear authentication details
