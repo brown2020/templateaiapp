@@ -12,7 +12,7 @@ import { Mail } from "lucide-react";
 
 import { auth } from "@/firebase/firebaseConfig";
 import { useAuth } from "@/context/AuthContext";
-import { getFirebaseErrorMessage } from "@/utils/errorHandler";
+import { getFirebaseErrorMessage, handleError, handleSuccess } from "@/utils/errorHandler";
 
 import { AuthPageLayout } from "@/components/AuthPageLayout";
 import FormInput from "@/components/FormInput"; // your existing component
@@ -26,7 +26,7 @@ import * as z from "zod";
 import { loginSchema } from "@/schemas";
 import { Checkbox } from "@/components/ui/checkbox";
 import { isValidCallbackUrl } from "@/utils/url";
-import { WEBAPP_URL } from "@/utils/constants";
+import { AUTH_MESSAGES, ROUTES, WEBAPP_URL } from "@/utils/constants";
 
 export function Login() {
     const router = useRouter();
@@ -46,15 +46,15 @@ export function Login() {
     const handleForgotPassword = async () => {
         const email = form.getValues("email");
         if (!email) {
-            toast.error("Please enter your email address first");
+            handleError(AUTH_MESSAGES.EMAIL_REQUIRED);
             return;
         }
         try {
             await sendPasswordResetEmail(auth, email);
-            toast.success("Password reset email sent! Check your inbox");
+            handleSuccess(AUTH_MESSAGES.PASSWORD_RESET_EMAIL_SENT);
         } catch (err) {
             const error = err as AuthError;
-            toast.error(error.message || "Failed to send reset email");
+            handleError(error, AUTH_MESSAGES.PASSWORD_RESET_EMAIL_ERROR);
         }
     };
 
@@ -69,14 +69,6 @@ export function Login() {
         startLoading(async () => {
             try {
                 await signIn(values.email, values.password);
-                const searchParams = new URLSearchParams(window.location.search);
-                const callbackUrl = searchParams.get('callbackUrl');
-
-                if (callbackUrl && isValidCallbackUrl(callbackUrl, WEBAPP_URL)) {
-                    router.push(callbackUrl);
-                } else {
-                    router.push('/dashboard');
-                }
             } catch (error) {
                 toast.error(getFirebaseErrorMessage(error));
             }
@@ -87,14 +79,14 @@ export function Login() {
         startIsGoogleLoading(async () => {
             try {
                 await signInWithGoogle();
-                toast.success("Successfully logged in with Google!");
+                toast.success(AUTH_MESSAGES.GOOGLE_LOGIN_SUCCESS);
                 const searchParams = new URLSearchParams(window.location.search);
                 const callbackUrl = searchParams.get('callbackUrl');
 
                 if (callbackUrl && isValidCallbackUrl(callbackUrl, WEBAPP_URL)) {
                     router.push(callbackUrl);
                 } else {
-                    router.push('/dashboard');
+                    router.push(ROUTES.DASHBOARD);
                 }
             } catch (err) {
                 const error = err as AuthError;

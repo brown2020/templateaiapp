@@ -30,10 +30,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { UserSessionCard } from "../UserSessionCard";
 import { useAuthStore } from "@/zustand/useAuthStore";
 import LoadingSpinner from "../LoadingSpinner";
+import { AUTH_MESSAGES, PROFILE_MESSAGES } from "@/utils/constants";
+import { handleError, handleSuccess } from "@/utils/errorHandler";
+import AuthComponent from "../AuthComponent";
 
 export function Profile() {
     const [loading, setLoading] = useState(false);
-    const { user, signOut, metadata, signOutSession, removeSession } = useAuth();
+    const { user, signOut, signOutSession, removeSession } = useAuth();
     const authLoaders = useAuthStore((state) => state.authLoaders);
     const sessions = useAuthStore((state) => state.sessions);
     const router = useRouter();
@@ -74,7 +77,7 @@ export function Profile() {
 
     const handleUpdateProfile = async (values: z.infer<typeof profileFormSchema>) => {
         if (!user?.uid) {
-            toast.error("No user found");
+            handleError(PROFILE_MESSAGES.USER_NOT_FOUND);
             return;
         }
 
@@ -84,9 +87,9 @@ export function Profile() {
                 ...values,
                 updatedAt: new Date(),
             });
-            toast.success("Profile updated successfully!");
+            handleSuccess(PROFILE_MESSAGES.UPDATE_SUCCESS);
         } catch (error) {
-            toast.error("Failed to update profile");
+            handleError(error, PROFILE_MESSAGES.UPDATE_ERROR);
         } finally {
             setLoading(false);
         }
@@ -95,10 +98,10 @@ export function Profile() {
     const handleSignOut = async () => {
         try {
             await signOut();
-            toast.success("Signed out successfully");
+            handleSuccess(AUTH_MESSAGES.LOGOUT_SUCCESS);
             router.push("/login");
         } catch (error) {
-            toast.error("Failed to sign out");
+            handleError(error, AUTH_MESSAGES.LOGOUT_ERROR);
         }
     };
 
@@ -112,11 +115,11 @@ export function Profile() {
                     <div className="px-3 py-4 sm:px-6 sm:py-5 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
                             <div className="flex items-center">
-                                {metadata?.photoURL ? (
+                                {storeProfile.photoUrl ? (
                                     <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
-                                        <AvatarImage src={metadata?.photoURL} alt="Profile" />
+                                        <AvatarImage src={storeProfile.photoUrl} alt="Profile" />
                                         <AvatarFallback>
-                                            {metadata.displayName?.charAt(0)}
+                                            {storeProfile.displayName?.charAt(0)}
                                         </AvatarFallback>
                                     </Avatar>
                                 ) : (

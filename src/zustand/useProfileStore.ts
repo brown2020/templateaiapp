@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { doc, getDoc, setDoc, updateDoc, Timestamp } from "firebase/firestore";
-import { db } from "@/firebase/firebaseConfig";
+import { auth, db } from "@/firebase/firebaseConfig";
 import { useAuthStore } from "@/zustand/useAuthStore"; // If you store UID in a separate Auth store
 
 //
@@ -60,8 +60,7 @@ const useProfileStore = create<ProfileState>((set, get) => ({
    * If no document exists, create it using `defaultProfile`.
    */
   fetchProfile: async () => {
-    const uid = useAuthStore.getState().uid;
-    console.log("[fetchProfile] Called. uid =", uid);
+    const uid = auth.currentUser?.uid;
 
     if (!uid) {
       console.warn("[fetchProfile] No uid found, aborting fetch.");

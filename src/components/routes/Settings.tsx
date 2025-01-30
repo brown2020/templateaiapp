@@ -5,6 +5,8 @@ import { appConfig } from "@/appConfig";
 import { Settings as SettingsIcon, Save } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
+import { SETTINGS_MESSAGES } from "@/utils/constants";
+import { handleError, handleSuccess } from "@/utils/errorHandler";
 
 export function Settings() {
   const [loading, setLoading] = useState(false);
@@ -27,10 +29,9 @@ export function Settings() {
     try {
       // Here you would save the settings to your database
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulated API call
-      toast.success("Settings saved successfully");
+      handleSuccess(SETTINGS_MESSAGES.UPDATE_SUCCESS);
     } catch (error) {
-      toast.error("Failed to save settings");
-      console.error(error);
+      handleError(error, SETTINGS_MESSAGES.UPDATE_ERROR);
     } finally {
       setLoading(false);
     }

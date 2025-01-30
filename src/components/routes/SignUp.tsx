@@ -20,6 +20,7 @@ import { SocialSignInButton } from "@/components/SocialSignInButton";
 import { signUpSchema } from "@/schemas";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { AUTH_MESSAGES, ROUTES } from "@/utils/constants";
 
 export function SignUp() {
     const { signUp, signInWithGoogle, handlePasswordlessSignIn } = useAuth();
@@ -41,8 +42,8 @@ export function SignUp() {
         startLoading(async () => {
             try {
                 await signUp(values.email, values.password);
-                toast.success("Account created successfully!");
-                router.push("/dashboard");
+                toast.success(AUTH_MESSAGES.SIGNUP_SUCCESS);
+                router.push(ROUTES.DASHBOARD);
             } catch (error) {
                 toast.error(getFirebaseErrorMessage(error));
             }
@@ -61,8 +62,8 @@ export function SignUp() {
         startIsGoogleLoading(async () => {
             try {
                 await signInWithGoogle();
-                toast.success("Account created successfully with Google!");
-                router.push("/dashboard");
+                toast.success(AUTH_MESSAGES.GOOGLE_SIGNUP_SUCCESS);
+                router.push(ROUTES.DASHBOARD);
             } catch (error) {
                 toast.error(getFirebaseErrorMessage(error));
             }
@@ -73,7 +74,7 @@ export function SignUp() {
         <AuthPageLayout
             title="Create your account"
             altLinkText="sign in to existing account"
-            altLinkHref="/login"
+            altLinkHref={ROUTES.LOGIN}
         >
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

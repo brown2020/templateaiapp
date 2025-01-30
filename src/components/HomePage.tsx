@@ -12,6 +12,7 @@ import TestimonialsSection from "./TestimonialsSection";
 import FAQSection from "./FAQSection";
 import GrowthSection from "./GrowthSection";
 import PricingSection from "./PricingSection";
+import { ROUTES } from "@/utils/constants";
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -64,7 +65,7 @@ export default function HomePage() {
                 variant="default"
                 className="bg-white text-blue-600 hover:bg-white/90 dark:bg-white dark:text-blue-600 dark:hover:bg-white/90"
               >
-                <Link href="/dashboard" className="flex items-center gap-2">
+                <Link href={ROUTES.DASHBOARD} className="flex items-center gap-2">
                   Go to Dashboard <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>

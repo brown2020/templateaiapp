@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { House } from 'lucide-react';
+import { ROUTES } from '@/utils/constants';
 
 export const metadata: Metadata = {
     title: '404 - Page not found',
@@ -19,7 +20,7 @@ export default function NotFound() {
                     or navigate back home.
                 </p>
                 <Link
-                    href="/dashboard"
+                    href={ROUTES.DASHBOARD}
                     className="mt-8 inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                     <House className="mr-1 h-4 w-4" />
                     Go to homepage

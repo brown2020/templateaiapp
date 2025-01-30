@@ -3,17 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { Menu, User, Sparkles, LayoutDashboard } from "lucide-react";
+import { Menu, User, Sparkles, LayoutDashboard, Shield } from "lucide-react";
 import { appConfig } from "@/appConfig";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { ROUTES } from "@/utils/constants";
 
 export default function NavbarDashboard() {
   const [isScrolled,] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const { user, metadata } = useAuth();
+  const { user, metadata, isAdmin } = useAuth();
 
   // useEffect(() => {
   //   const handleScroll = () => {
@@ -92,10 +93,16 @@ export default function NavbarDashboard() {
                     <Sparkles className="h-4 w-4" />
                     Feature
                   </NavLink>
-                  <NavLink href="/dashboard">
+                  <NavLink href={ROUTES.DASHBOARD}>
                     <LayoutDashboard className="h-4 w-4" />
                     Dashboard
                   </NavLink>
+                  {isAdmin && (
+                    <NavLink href={ROUTES.ADMIN_DASHBOARD}>
+                      <Shield className="h-4 w-4" />
+                      Admin
+                    </NavLink>
+                  )}
                   <NavLink href="/profile">
                     {metadata?.photoURL ? (
                       <Avatar className="h-6 w-6">
@@ -143,10 +150,16 @@ export default function NavbarDashboard() {
                           <Sparkles className="h-4 w-4" />
                           <span className="dark:text-gray-300">Feature</span>
                         </MobileNavLink>
-                        <MobileNavLink href="/dashboard">
+                        <MobileNavLink href={ROUTES.DASHBOARD}>
                           <LayoutDashboard className="h-4 w-4" />
                           <span className="dark:text-gray-300">Dashboard</span>
                         </MobileNavLink>
+                        {isAdmin && (
+                          <MobileNavLink href={ROUTES.ADMIN_DASHBOARD}>
+                            <Shield className="h-4 w-4" />
+                            <span className="dark:text-gray-300">Admin</span>
+                          </MobileNavLink>
+                        )}
                         <MobileNavLink href="/profile">
                           <User className="h-4 w-4" />
                           <span className="dark:text-gray-300">Profile</span>

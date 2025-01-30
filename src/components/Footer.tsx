@@ -73,7 +73,7 @@ export default function Footer() {
                 placeholder="Enter your email"
                 className="max-w-[240px] dark:bg-slate-900 dark:border-slate-700 dark:text-gray-100"
               />
-              <Button>Subscribe</Button>
+              <Button variant="primary">Subscribe</Button>
             </div>
             <div className="flex space-x-4 pt-4">
               {socialLinks.map((social) => (

@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import { usePathname } from "next/navigation";
 import { publicPaths } from "@/appConfig";
 import NavbarDashboard from "@/components/NavbarDashboard";
+import { IGNORE_NAV } from "@/utils/constants";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,16 +21,18 @@ export default function RootLayout({
 }) {
   const pathname = usePathname();
   const isPublic = publicPaths.includes(pathname);
+  const isAuth = IGNORE_NAV.includes(pathname);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen flex flex-col`}>
         <ThemeProvider>
           <AuthProvider>
-            {isPublic ? <Navbar /> : <NavbarDashboard />}
+            {!isAuth && (isPublic ? <Navbar /> : <NavbarDashboard />)}
             <main className="flex-grow bg-background text-foreground">
               {children}
             </main>
-            <Footer />
+            {!isAuth && <Footer />}
             <Toaster
               position="bottom-right"
               toastOptions={{

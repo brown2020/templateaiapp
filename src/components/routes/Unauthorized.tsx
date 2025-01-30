@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { HomeIcon as House, ShieldAlert } from "lucide-react"
+import { ROUTES } from "@/utils/constants"
 
 export const metadata: Metadata = {
     title: "401 - Unauthorized",
@@ -20,14 +21,14 @@ export function Unauthorized() {
                 </p>
                 <div className="mt-8 flex justify-center space-x-4">
                     <Link
-                        href="/dashboard"
+                        href={ROUTES.DASHBOARD}
                         className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                     >
                         <House className="mr-2 h-4 w-4" />
                         Go to homepage
                     </Link>
                     <Link
-                        href="/login"
+                        href={ROUTES.LOGIN}
                         className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                     >
                         <ShieldAlert className="mr-2 h-4 w-4" />

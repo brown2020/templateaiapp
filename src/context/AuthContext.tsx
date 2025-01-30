@@ -35,9 +35,9 @@ import { UserMetadata, UserSession } from "@/types/auth";
 import { getCookie } from "cookies-next/client";
 import { isValidCallbackUrl } from "@/utils/url";
 import { useRouter } from "next/navigation";
-import { WEBAPP_URL } from "@/utils/constants";
+import { AUTH_MESSAGES, ROUTES, WEBAPP_URL } from "@/utils/constants";
 import toast from "react-hot-toast";
-import { getFirebaseErrorMessage } from "@/utils/errorHandler";
+import { getFirebaseErrorMessage, handleError, handleSuccess } from "@/utils/errorHandler";
 
 export interface AuthContextType {
   user: User | null;
@@ -127,6 +127,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           displayName: data.displayName,
           email: data.email,
           photoURL: data.photoURL,
+        });
+
+        updateProfile({
+          photoUrl: data.photoURL,
+          contactEmail: data.email,
+          email: data.email,
         });
         console.log("[updateUserMetadata] State metadata updated:", {
           createdAt,
@@ -390,7 +396,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (callbackUrl && isValidCallbackUrl(callbackUrl, WEBAPP_URL)) {
         router.push(callbackUrl);
       } else {
-        router.push('/dashboard');
+        router.push(ROUTES.DASHBOARD);
       }
       return result.user;
     } catch (err) {
@@ -434,9 +440,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("[signInWithGoogle] Success, updating metadata...");
       await updateUserMetadata(result.user);
       await updateUserSession(result.user);
-      await updateProfile({
-        email: result.user.email ?? "",
-      });
       return result.user;
     } catch (err) {
       if (err instanceof Error) {
@@ -449,7 +452,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handlePasswordlessSignIn = async (email: string) => {
     if (!email) {
-      toast.error("Please enter your email address first");
+      handleError(AUTH_MESSAGES.EMAIL_REQUIRED);
       return;
     }
     try {
@@ -459,9 +462,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       await sendSignInLinkToEmail(auth, email, actionCodeSettings);
       window.localStorage.setItem(appConfig.storage.emailSave, email);
-      toast.success("Check your email for the sign-in link!");
+      handleSuccess(AUTH_MESSAGES.PASSWORDLESS_EMAIL_SENT);
     } catch (error) {
-      toast.error(getFirebaseErrorMessage(error));
+      handleError(error, AUTH_MESSAGES.PASSWORDLESS_EMAIL_ERROR);
     }
   };
 
