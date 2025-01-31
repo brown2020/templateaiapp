@@ -44,5 +44,5 @@ export type FirebaseError = {
 
 export interface DecodedToken {
   admin?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }

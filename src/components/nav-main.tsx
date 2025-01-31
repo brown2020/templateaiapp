@@ -49,9 +49,6 @@ export function NavMain({ items }: NavMainProps) {
   const pathname = usePathname();
 
   const isActive = (url: string) => {
-    console.log('url :>> ', url);
-    console.log('pathname :>> ', pathname);
-
     return pathname === url;
   }
   return (

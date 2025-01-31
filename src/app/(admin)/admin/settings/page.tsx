@@ -1,9 +1,10 @@
+import { AdminContainer } from "@/components/admin";
 import { AdminSettings } from "@/components/routes";
 
 export default function AdminSettingsPage() {
     return (
-        <div className="container mx-auto px-4 py-8">
+        <AdminContainer className="p-2">
             <AdminSettings />
-        </div>
+        </AdminContainer>
     );
 }

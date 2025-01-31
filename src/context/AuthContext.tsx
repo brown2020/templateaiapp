@@ -36,8 +36,7 @@ import { getCookie } from "cookies-next/client";
 import { isValidCallbackUrl } from "@/utils/url";
 import { useRouter } from "next/navigation";
 import { AUTH_MESSAGES, ROUTES, WEBAPP_URL } from "@/utils/constants";
-import toast from "react-hot-toast";
-import { getFirebaseErrorMessage, handleError, handleSuccess } from "@/utils/errorHandler";
+import { handleError, handleSuccess } from "@/utils/errorHandler";
 
 export interface AuthContextType {
   user: User | null;
@@ -49,7 +48,7 @@ export interface AuthContextType {
   signUp: (email: string, password: string) => Promise<User>;
   signInWithGoogle: () => Promise<User>;
   signOut: () => Promise<void>;
-  updateUserRole: (isAdmin: boolean) => Promise<void>;
+  updateUserRole: (userId: string, isAdmin: boolean) => Promise<void>;
   signOutSession: (sessionId: string) => Promise<void>;
   removeSession: (sessionId: string) => Promise<void>;
   updateUserSession: (user: User, isActive: boolean) => Promise<string | undefined>;
@@ -93,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         lastLoginAt: serverTimestamp(),
         displayName: user.displayName ?? null,
         email: user.email ?? null,
+        isAdmin: isAdmin,
         photoURL: user.photoURL ?? null,
         ...((!userDoc.exists() || isNewUser) && {
           createdAt: serverTimestamp(),
@@ -133,6 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           photoUrl: data.photoURL,
           contactEmail: data.email,
           email: data.email,
+          emailVerified: user.emailVerified,
         });
         console.log("[updateUserMetadata] State metadata updated:", {
           createdAt,
@@ -221,13 +222,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    let sessionListener: any = null;
-    let sessionsListener: any = null;
+    let sessionListener: (() => void) | null = null;
+    let sessionsListener: (() => void) | null = null;
 
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setUser(user);
-        let sessionId = getCookie(appConfig.sessionId);
+        const sessionId = getCookie(appConfig.sessionId);
 
         try {
           if (sessionId) {
@@ -306,6 +307,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const adminClaim = tokenResult.claims.admin === true;
           console.log("[onIdTokenChanged] adminClaim =", adminClaim);
           setIsAdmin(adminClaim);
+          useAuthStore.setState({ isAdmin: adminClaim });
 
           setUser(firebaseUser);
           console.log(
@@ -320,6 +322,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           useAuthStore.setState({
             uid: firebaseUser.uid,
             authEmail: firebaseUser.email ?? "",
+            isAdmin: adminClaim,
             authDisplayName: firebaseUser.displayName ?? "",
             // ...any other fields you want
           });
@@ -559,7 +562,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const updateUserRole = async (newIsAdmin: boolean) => {
+  const updateUserRole = async (userId: string, newIsAdmin: boolean) => {
     console.log("[updateUserRole] Called with newIsAdmin:", newIsAdmin);
     if (!user) {
       console.warn("[updateUserRole] No user found, cannot proceed.");
@@ -573,16 +576,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${await user.getIdToken()}`,
         },
-        body: JSON.stringify({ userId: user.uid, isAdmin: newIsAdmin }),
+        body: JSON.stringify({ userId: userId, isAdmin: newIsAdmin }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update user role");
+        throw new Error("[updateUserRole] Failed to update user role");
       }
 
       // Force token refresh to get new claims
       console.log("[updateUserRole] Forcing token refresh...");
       await user.getIdToken(true);
+      // update user role in firestore
+      const userRef = doc(db, "users", userId);
+      await updateDoc(userRef, {
+        isAdmin: newIsAdmin,
+        updatedAt: serverTimestamp()
+      });
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

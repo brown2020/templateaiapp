@@ -6,6 +6,7 @@ import { UserSession } from "@/types/auth";
 import { LogOut, Monitor, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipWrapper } from "./ui/tooltip-wrapper";
 
 interface SessionCardProps {
     session: UserSession
@@ -57,26 +58,19 @@ export function UserSessionCard({ session, onSignOut, onRemove }: SessionCardPro
 
                     {!session.currentSession && (
                         <div className="flex gap-2">
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            size="xs"
-                                            className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 border-gray-200 dark:border-gray-700"
-                                            onClick={() => onSignOut(session.deviceInfo.sessionId)}
-                                            disabled={!session.isActive}
-                                        >
-                                            <LogOut className="h-4 w-4" />
-                                            Sign out
-                                            <span className="sr-only">Sign out session</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Sign out this session</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                            <TooltipWrapper tooltip="Sign out this session">
+                                <Button
+                                    variant="outline"
+                                    size="xs"
+                                    className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 border-gray-200 dark:border-gray-700"
+                                    onClick={() => onSignOut(session.deviceInfo.sessionId)}
+                                    disabled={!session.isActive}
+                                >
+                                    <LogOut className="h-4 w-4" />
+                                    Sign out
+                                    <span className="sr-only">Sign out session</span>
+                                </Button>
+                            </TooltipWrapper>
 
                             {!session.isActive && <TooltipProvider>
                                 <Tooltip>

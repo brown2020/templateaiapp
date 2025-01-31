@@ -16,7 +16,6 @@ import {
     LogOut,
     CreditCard,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import useProfileStore from "@/zustand/useProfileStore";
 import moment from "moment";
 import { Button } from "@/components/ui/button";
@@ -32,7 +31,6 @@ import { useAuthStore } from "@/zustand/useAuthStore";
 import LoadingSpinner from "../LoadingSpinner";
 import { AUTH_MESSAGES, PROFILE_MESSAGES } from "@/utils/constants";
 import { handleError, handleSuccess } from "@/utils/errorHandler";
-import AuthComponent from "../AuthComponent";
 
 export function Profile() {
     const [loading, setLoading] = useState(false);

@@ -2,7 +2,6 @@
 
 import {
   BadgeCheck,
-  Bell,
   ChevronsUpDown,
   CreditCard,
   LogOut,
@@ -30,7 +29,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { AUTH_MESSAGES, ROUTES } from "@/utils/constants"
-import { usePathname, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { handleError } from "@/utils/errorHandler"
 import { useAuth } from "@/context/AuthContext"
 import { User } from "firebase/auth"
@@ -54,8 +53,6 @@ export function NavUser({
   };
 
   if (!user) return null;
-
-  console.log('user :>> ', user);
 
   return (
     <SidebarMenu>
@@ -104,7 +101,7 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="cursor-pointer" onClick={() => router.push(ROUTES.ACCOUNT)}>
+              <DropdownMenuItem className="cursor-pointer" onClick={() => router.push(ROUTES.PROFILE)}>
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { appConfig } from "@/appConfig";
 import { Settings as SettingsIcon, Save } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { SETTINGS_MESSAGES } from "@/utils/constants";
 import { handleError, handleSuccess } from "@/utils/errorHandler";

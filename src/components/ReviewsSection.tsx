@@ -2,6 +2,7 @@
 
 import { Marquee } from "@/components/ui/marquee";
 import { appConfig } from "@/appConfig";
+import Image from "next/image";
 
 const { reviews } = appConfig;
 const firstRow = reviews.data.slice(0, reviews.data.length / 2);
@@ -72,11 +73,11 @@ const ReviewCard = ({
                     : 'from-indigo-600 to-pink-600'
                 }`}>
             <div className="flex flex-row items-center gap-2">
-                <img
+                <Image
                     className="rounded-full border-2 border-white/20"
                     width="40"
                     height="40"
-                    alt=""
+                    alt={name}
                     src={img}
                 />
                 <div className="flex flex-col">

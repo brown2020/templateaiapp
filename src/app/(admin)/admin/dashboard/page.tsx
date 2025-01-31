@@ -1,7 +1,10 @@
+import { AdminContainer } from "@/components/admin";
 import { AdminDashboard } from "@/components/routes";
 
 export default function AdminDashboardPage() {
     return (
-        <AdminDashboard />
+        <AdminContainer className="p-2">
+            <AdminDashboard />
+        </AdminContainer>
     );
 }

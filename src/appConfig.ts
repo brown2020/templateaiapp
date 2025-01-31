@@ -1,4 +1,4 @@
-import { AudioWaveform, BarChart3, Bot, Calendar, Command, GalleryVerticalEnd, Globe, Paintbrush, PieChart, SquareTerminal, Users, Settings2, BookOpen, Frame, Map, UsersRound, House } from "lucide-react";
+import { BarChart3, Calendar, Globe, Paintbrush, PieChart, Users, Frame, Map, UsersRound, House, GalleryVerticalEnd } from "lucide-react";
 import { ROUTES } from "@/utils/constants";
 
 export const appConfig = {
@@ -466,6 +466,57 @@ export const appConfig = {
         icon: Map,
       },
     ],
+
+    charts: {
+      users: {
+        title: "Users",
+        description: "",
+        data: [
+          { month: "January", desktop: 186, mobile: 80 },
+          { month: "February", desktop: 305, mobile: 200 },
+          { month: "March", desktop: 237, mobile: 120 },
+          { month: "April", desktop: 73, mobile: 190 },
+          { month: "May", desktop: 209, mobile: 130 },
+          { month: "June", desktop: 214, mobile: 140 },
+        ]
+      },
+      analytics: {
+        title: "Analytics",
+        description: "",
+        data: [
+          { month: "January", page_views: 125, unique_visitors: 82, bounce_rate: 45.2 },
+          { month: "February", page_views: 158, unique_visitors: 91, bounce_rate: 42.8 },
+          { month: "March", page_views: 142, unique_visitors: 88, bounce_rate: 44.1 },
+          { month: "April", page_views: 169, unique_visitors: 102, bounce_rate: 41.5 },
+          { month: "May", page_views: 182, unique_visitors: 115, bounce_rate: 40.2 },
+          { month: "June", page_views: 175, unique_visitors: 108, bounce_rate: 41.8 },
+        ]
+      },
+      activity: {
+        title: "Recent Activity",
+        description: "",
+        data: [
+          { month: "January", auth: 45, profile: 28, settings: 15, interaction: 80, project: 40 },
+          { month: "February", auth: 72, profile: 53, settings: 37, interaction: 95, project: 66 },
+          { month: "March", auth: 32, profile: 69, settings: 51, interaction: 77, project: 83 },
+          { month: "April", auth: 88, profile: 55, settings: 39, interaction: 63, project: 79 },
+          { month: "May", auth: 58, profile: 84, settings: 56, interaction: 82, project: 52 },
+          { month: "June", auth: 85, profile: 41, settings: 54, interaction: 79, project: 38 }
+        ]
+      },
+      overview: {
+        title: "Overview",
+        description: "Key performance metrics across the platform",
+        data: [
+          { month: "January", revenue: 250, active_users: 250, projects: 45, tasks_completed: 380 },
+          { month: "February", revenue: 380, active_users: 480, projects: 52, tasks_completed: 425 },
+          { month: "March", revenue: 320, active_users: 320, projects: 48, tasks_completed: 395 },
+          { month: "April", revenue: 490, active_users: 580, projects: 56, tasks_completed: 450 },
+          { month: "May", revenue: 520, active_users: 650, projects: 61, tasks_completed: 485 },
+          { month: "June", revenue: 450, active_users: 580, projects: 58, tasks_completed: 460 }
+        ]
+      }
+    }
   }
 };
 

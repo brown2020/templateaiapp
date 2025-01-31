@@ -37,9 +37,9 @@ export const getFirebaseErrorMessage = (error: unknown): string => {
 export const handleError = (error: unknown, customMessage?: string) => {
   console.error(error);
   const message = customMessage || getFirebaseErrorMessage(error);
-  toast.error(message);
+  toast.error(message, { position: "bottom-right" });
 };
 
 export const handleSuccess = (message: string) => {
-  toast.success(message);
+  toast.success(message, { position: "bottom-right" });
 };

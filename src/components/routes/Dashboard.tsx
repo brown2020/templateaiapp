@@ -30,7 +30,6 @@ export function Dashboard() {
 
     fetchProfile();
   }, [user?.uid]);
-  console.log('profile:>> ', profile);
 
   if (loading) {
     return (

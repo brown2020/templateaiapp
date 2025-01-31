@@ -1,5 +1,3 @@
-import { adminPaths } from "@/appConfig";
-
 export const WEBAPP_URL = process.env.NEXT_PUBLIC_WEBAPP_URL || "http://localhost:3000";
 
 export const AUTH_MESSAGES = {
@@ -46,7 +44,6 @@ export const ROUTES = {
   SIGNUP: "/signup",
   DASHBOARD: "/dashboard",
   PROFILE: "/profile",
-  ACCOUNT: "/account",
   ABOUT: "/about",
   TERMS: "/terms",
   PRIVACY: "/privacy",

@@ -6,7 +6,7 @@ import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import { AdminContainer, AdminNavbar } from "@/components/admin";
+import { AdminNavbar } from "@/components/admin";
 
 export default function RootLayout({
     children,
@@ -24,9 +24,7 @@ export default function RootLayout({
                             <AdminNavbar />
                             <main className="flex flex-1 flex-col">
                                 <div className="flex flex-1 flex-col p-4">
-                                    <AdminContainer className="p-2">
-                                        {children}
-                                    </AdminContainer>
+                                    {children}
                                 </div>
                             </main>
                         </SidebarInset>

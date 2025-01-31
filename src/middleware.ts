@@ -13,12 +13,10 @@ export async function middleware(request: NextRequest) {
   const isAuthenticated = !!authToken?.value;
 
   let isAdmin = false;
-  let userId = null;
   if (authToken?.value) {
     try {
       const decodedToken = jwtDecode<DecodedToken>(authToken.value);
       isAdmin = !!decodedToken.admin;
-      userId = decodedToken.user_id;
     } catch (error) {
       console.error("Token decoding error:", error);
       // Treat as unauthenticated if token is invalid

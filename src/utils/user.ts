@@ -77,7 +77,7 @@ export const getAvatarUrl = (user: User | null): string => {
 };
 
 export function detectBrowser() {
-  var userAgent = navigator.userAgent;
+  const userAgent = navigator.userAgent;
   if (userAgent.indexOf("Edg") > -1) {
     return "Microsoft Edge";
   } else if (userAgent.indexOf("Chrome") > -1) {
@@ -112,7 +112,6 @@ export function detectOS() {
 }
 
 export async function getUserLocation() {
-  console.log("calling getUserLocation");
   try {
     const response = await fetch(`https://ipinfo.io?token=${process.env.NEXT_PUBLIC_IPINFO_TOKEN}`);
     const data = await response.json();
